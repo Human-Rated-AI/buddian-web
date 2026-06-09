@@ -1,0 +1,20 @@
+{
+  "name": "@human-rated-ai/trust-web",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Open source Trust AI web client for verifiable private AI sessions.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "release": "npm run build && scripts/build-release.sh"
+  },
+  "dependencies": {
+    "@noble/secp256k1": "2.3.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

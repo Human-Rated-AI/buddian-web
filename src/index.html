@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f7f8fa">
+    <meta name="description" content="Trust AI protects AI requests with client-side encryption and secure NVIDIA GPU execution.">
+    <title>Trust AI</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <h1 data-i18n="app_name">Trust AI</h1>
+        <p id="topbar-subtitle" class="subline" data-i18n="subtitle">Private AI requests on secure NVIDIA GPUs</p>
+      </div>
+      <div class="top-actions">
+        <div id="global-language-switch" class="global-language-switch" role="group" aria-label="Language">
+          <button class="global-language-button" type="button" data-lang="en" aria-pressed="false">EN</button>
+          <button class="global-language-button" type="button" data-lang="es" aria-pressed="false">ES</button>
+          <button class="global-language-button" type="button" data-lang="ru" aria-pressed="false">RU</button>
+        </div>
+        <button id="auth-button" class="auth-button" type="button" data-i18n="login">Log in</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section id="landing" class="landing">
+        <div class="hero">
+          <p class="eyebrow" data-i18n="landing_eyebrow">Confidential AI</p>
+          <h2 data-i18n="landing_title">Your prompts should stay yours.</h2>
+          <p class="hero-copy" data-i18n="landing_copy">
+            Trust AI encrypts your request before it leaves your device, processes it inside hardware-protected NVIDIA GPU infrastructure, and returns the answer encrypted. The server routes work and handles billing; it should not see your unencrypted prompt, files, images, video, audio, or model response.
+          </p>
+          <div class="actions">
+            <button id="google-login" type="button" data-i18n="continue_google">Continue with Google</button>
+            <button id="apple-login" class="secondary-button" type="button" data-i18n="continue_apple">Continue with Apple</button>
+          </div>
+          <p id="auth-note" class="note" data-i18n="loading_signin">Loading sign-in.</p>
+        </div>
+
+        <div class="proof-grid">
+          <article>
+            <h3 data-i18n="proof_running_title">Protected while running</h3>
+            <p data-i18n="proof_running_copy">Confidential GPU execution protects AI code and data while the model is processing it, not only while files are stored or sent over the network.</p>
+          </article>
+          <article>
+            <h3 data-i18n="proof_hardware_title">Verifiable hardware</h3>
+            <p data-i18n="proof_hardware_copy">The client checks fresh attestation evidence and the model encryption key before it sends encrypted requests.</p>
+          </article>
+          <article>
+            <h3 data-i18n="proof_open_title">Open client path</h3>
+            <p data-i18n="proof_open_copy">The downloadable client is built from public source so users can compile it, calculate its checksum, and compare it with the published release.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="app-shell" class="hidden">
+        <section class="account-strip">
+          <div>
+            <span data-i18n="balance">Balance</span>
+            <strong id="user-balance">$0.00</strong>
+          </div>
+          <div>
+            <span data-i18n="status">Status</span>
+            <strong id="service-status" data-i18n="checking">Checking</strong>
+          </div>
+          <div>
+            <span data-i18n="account">Account</span>
+            <strong id="account-email" data-i18n="signed_in">Signed in</strong>
+          </div>
+        </section>
+
+        <section class="toolbar" aria-label="Model filters">
+          <label>
+            <span data-i18n="search">Search</span>
+            <input id="search" type="search" autocomplete="off" placeholder="deepseek, qwen, image" data-i18n-placeholder="search_placeholder">
+          </label>
+
+          <label>
+            <span data-i18n="provider">Provider</span>
+            <select id="provider">
+              <option value="standard" data-i18n="preinstalled_secure">Pre-installed secure</option>
+              <option value="" data-i18n="all_available">All available</option>
+              <option value="phala/">phala/</option>
+              <option value="openai/">openai/</option>
+              <option value="anthropic/">anthropic/</option>
+              <option value="google/">google/</option>
+              <option value="qwen/">qwen/</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="input">Input</span>
+            <select id="input-modality">
+              <option value="" data-i18n="any">Any</option>
+              <option value="text" data-i18n="text">Text</option>
+              <option value="image" data-i18n="image">Image</option>
+              <option value="file" data-i18n="file">File</option>
+              <option value="audio" data-i18n="audio">Audio</option>
+              <option value="video" data-i18n="video">Video</option>
+            </select>
+          </label>
+
+          <label>
+            <span data-i18n="output">Output</span>
+            <select id="output-modality">
+              <option value="" data-i18n="any">Any</option>
+              <option value="text" data-i18n="text">Text</option>
+              <option value="image" data-i18n="image">Image</option>
+              <option value="audio" data-i18n="audio">Audio</option>
+              <option value="video" data-i18n="video">Video</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="workbench">
+          <div class="models-panel">
+            <div class="section-head">
+              <h2 data-i18n="preinstalled_models">Pre-installed Models</h2>
+              <span id="model-count" class="count">0</span>
+            </div>
+            <div id="model-list" class="model-list" aria-live="polite"></div>
+          </div>
+
+          <aside class="side-panel">
+            <div class="section-head">
+              <h2 data-i18n="private_inference">Private Inference</h2>
+            </div>
+
+            <label>
+              <span data-i18n="model">Model</span>
+              <input id="quote-model" type="text" readonly>
+            </label>
+
+            <label>
+              <span data-i18n="prompt">Prompt</span>
+              <textarea id="prompt-text" rows="6" placeholder="Ask a private question" data-i18n-placeholder="prompt_placeholder"></textarea>
+            </label>
+
+            <div class="split">
+              <label>
+                <span data-i18n="input_tokens">Input tokens</span>
+                <input id="prompt-tokens" type="number" min="0" step="1" value="1000">
+              </label>
+              <label>
+                <span data-i18n="output_tokens">Output tokens</span>
+                <input id="completion-tokens" type="number" min="1" step="1" value="512">
+              </label>
+            </div>
+
+            <button id="quote-button" type="button" data-i18n="quote_request">Quote request</button>
+            <output id="quote-result" class="result" data-i18n="select_model">Select a model.</output>
+            <button id="run-button" type="button" data-i18n="run_encrypted">Run encrypted request</button>
+            <output id="proof-result" class="result proof-result" data-i18n="proof_waiting">Proof will appear here.</output>
+            <output id="inference-result" class="result inference-result" data-i18n="response_waiting">Encrypted response will be decrypted here.</output>
+
+            <div class="section-head section-gap">
+              <h2 data-i18n="top_up">Top Up</h2>
+            </div>
+            <label>
+              <span data-i18n="amount_usd">Amount USD</span>
+              <input id="topup-amount" type="number" min="10" step="1" value="10">
+            </label>
+            <button id="topup-button" type="button" data-i18n="quote_topup">Quote top-up</button>
+            <output id="topup-result" class="result"></output>
+            <a id="contra-link" class="pay-link hidden" href="#" target="_blank" rel="noopener" data-i18n="open_card_payment">Open card payment</a>
+
+            <div class="section-head section-gap">
+              <h2 data-i18n="installable_models">Installable Models</h2>
+            </div>
+            <div id="installable-list" class="compact-list"></div>
+
+            <div class="section-head section-gap">
+              <h2 data-i18n="usage">Usage</h2>
+            </div>
+            <div id="usage-list" class="compact-list"></div>
+          </aside>
+        </section>
+      </section>
+
+      <section id="extension-shell" class="hidden"></section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
