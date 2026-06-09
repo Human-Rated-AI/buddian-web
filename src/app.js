@@ -285,7 +285,14 @@ function renderRoute() {
         helpers: { $, escapeHtml, money, t, applyTranslations },
       });
     } else {
-      el.extensionShell.innerHTML = `<div class="empty">${escapeHtml(t("admin_unavailable"))}</div>`;
+      el.extensionShell.innerHTML = `<div class="empty">${escapeHtml(t("checking"))}</div>`;
+      import("/admin.js")
+        .then(() => {
+          if (isAdminRoute()) renderRoute();
+        })
+        .catch(() => {
+          el.extensionShell.innerHTML = `<div class="empty">${escapeHtml(t("admin_unavailable"))}</div>`;
+        });
     }
   }
 }
