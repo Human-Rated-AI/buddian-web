@@ -542,6 +542,8 @@ async function runEncryptedInference() {
       `${t("e2ee_applied")}: ${String(response.e2ee?.applied || false)}`,
       `${t("response_signature")}: ${response.signature ? t("present") : t("missing")}`,
       `request id: ${response.upstream_response?.id || "n/a"}`,
+      `request sha256: ${response.proof?.request_sha256 || "n/a"}`,
+      `response sha256: ${response.proof?.response_sha256 || "n/a"}`,
     ].join("\n");
 
     await refreshAccount();
