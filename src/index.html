@@ -27,19 +27,42 @@
     <main class="layout">
       <section id="landing" class="landing">
         <div class="hero">
-          <p class="eyebrow" data-i18n="landing_eyebrow">Confidential AI</p>
-          <h2 data-i18n="landing_title">Your prompts should stay yours.</h2>
-          <p class="hero-copy" data-i18n="landing_copy">
-            Trust AI encrypts your request before it leaves your device, processes it inside hardware-protected NVIDIA GPU infrastructure, and returns the answer encrypted. The server routes work and handles billing; it should not see your unencrypted prompt, files, images, video, audio, or model response.
-          </p>
-          <div class="actions">
-            <button id="google-login" type="button" data-i18n="continue_google">Continue with Google</button>
-            <button id="apple-login" class="secondary-button" type="button" data-i18n="continue_apple">Continue with Apple</button>
+          <img class="hero-image" src="/assets/generated/hero-confidential-ai.webp" alt="" width="1536" height="864" aria-hidden="true">
+          <div class="hero-content">
+            <p class="eyebrow" data-i18n="landing_eyebrow">Confidential AI</p>
+            <h2 data-i18n="landing_title">AI is powerful. Your private data is the price unless you protect it.</h2>
+            <p class="hero-copy" data-i18n="landing_copy">
+              Prompts often contain client names, contracts, source code, medical details, financial plans, unreleased products, and private files. Trust AI encrypts them on your device, sends only ciphertext through our server, and decrypts the answer only in your browser.
+            </p>
+            <div class="hero-points">
+              <span data-i18n="hero_point_1">No plaintext prompts in our gateway</span>
+              <span data-i18n="hero_point_2">Hardware-protected NVIDIA GPU execution</span>
+              <span data-i18n="hero_point_3">Open client build with checksum verification</span>
+            </div>
+            <div class="actions">
+              <button id="google-login" type="button" data-i18n="continue_google">Continue with Google</button>
+              <button id="apple-login" class="secondary-button" type="button" data-i18n="continue_apple">Continue with Apple</button>
+            </div>
+            <p id="auth-note" class="note" data-i18n="loading_signin">Loading sign-in.</p>
           </div>
-          <p id="auth-note" class="note" data-i18n="loading_signin">Loading sign-in.</p>
         </div>
 
-        <div class="proof-grid">
+        <section class="risk-section">
+          <div class="risk-copy">
+            <p class="eyebrow" data-i18n="risk_eyebrow">Why it matters</p>
+            <h2 data-i18n="risk_title">A normal AI request can become a permanent copy of your sensitive work.</h2>
+            <p data-i18n="risk_copy">
+              Your prompt may pass through application logs, debugging tools, queues, vendor accounts, support systems, and retention policies before a model answers. If that text is readable anywhere along the path, a private question can become discoverable business, legal, health, or personal data.
+            </p>
+          </div>
+          <img class="risk-image" src="/assets/generated/data-exposure-risk.webp" alt="" width="1536" height="864" loading="lazy" aria-hidden="true">
+        </section>
+
+        <section class="proof-band">
+          <div class="proof-copy">
+            <p class="eyebrow" data-i18n="proof_eyebrow">What changes</p>
+            <h2 data-i18n="proof_title">The server should route and bill. It should not read.</h2>
+          </div>
           <article>
             <h3 data-i18n="proof_running_title">Protected while running</h3>
             <p data-i18n="proof_running_copy">Confidential GPU execution protects AI code and data while the model is processing it, not only while files are stored or sent over the network.</p>
@@ -52,7 +75,18 @@
             <h3 data-i18n="proof_open_title">Open client path</h3>
             <p data-i18n="proof_open_copy">The downloadable client is built from public source so users can compile it, calculate its checksum, and compare it with the published release.</p>
           </article>
-        </div>
+        </section>
+
+        <section class="enclave-section">
+          <img class="enclave-image" src="/assets/generated/verified-enclave.webp" alt="" width="1536" height="864" loading="lazy" aria-hidden="true">
+          <div class="enclave-copy">
+            <p class="eyebrow" data-i18n="enclave_eyebrow">Trust, but verify</p>
+            <h2 data-i18n="enclave_title">Before secrets move, the client checks the secure environment.</h2>
+            <p data-i18n="enclave_copy">
+              The client fetches fresh attestation evidence, checks the model encryption key, encrypts locally, and shows proof hashes after the response. You can use the public client source to build the same user client and compare checksums.
+            </p>
+          </div>
+        </section>
       </section>
 
       <section id="app-shell" class="hidden">

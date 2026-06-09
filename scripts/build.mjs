@@ -1,4 +1,4 @@
-import { copyFile, mkdir, rm } from "node:fs/promises";
+import { copyFile, cp, mkdir, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import esbuild from "esbuild";
 
@@ -12,6 +12,9 @@ await mkdir(dist, { recursive: true });
 await Promise.all([
   copyFile(resolve(src, "index.html"), resolve(dist, "index.html")),
   copyFile(resolve(src, "styles.css"), resolve(dist, "styles.css")),
+  cp(resolve(src, "assets"), resolve(dist, "assets"), { recursive: true, force: true }).catch((error) => {
+    if (error.code !== "ENOENT") throw error;
+  }),
 ]);
 
 await esbuild.build({

@@ -7,9 +7,12 @@ export const I18N = {
     login: "Log in",
     logout: "Log out",
     landing_eyebrow: "Confidential AI",
-    landing_title: "Your prompts should stay yours.",
+    landing_title: "AI is powerful. Your private data is the price unless you protect it.",
     landing_copy:
-      "Trust AI encrypts your request before it leaves your device, processes it inside hardware-protected NVIDIA GPU infrastructure, and returns the answer encrypted. The server routes work and handles billing; it should not see your unencrypted prompt, files, images, video, audio, or model response.",
+      "Prompts often contain client names, contracts, source code, medical details, financial plans, unreleased products, and private files. Trust AI encrypts them on your device, sends only ciphertext through our server, and decrypts the answer only in your browser.",
+    hero_point_1: "No plaintext prompts in our gateway",
+    hero_point_2: "Hardware-protected NVIDIA GPU execution",
+    hero_point_3: "Open client build with checksum verification",
     continue_google: "Continue with Google",
     continue_apple: "Continue with Apple",
     loading_signin: "Loading sign-in.",
@@ -17,6 +20,12 @@ export const I18N = {
     signin_unconfigured: "Sign-in is not configured.",
     signin_opening: "Opening sign-in.",
     signin_required: "Sign in to see models, balance, payments, and usage.",
+    risk_eyebrow: "Why it matters",
+    risk_title: "A normal AI request can become a permanent copy of your sensitive work.",
+    risk_copy:
+      "Your prompt may pass through application logs, debugging tools, queues, vendor accounts, support systems, and retention policies before a model answers. If that text is readable anywhere along the path, a private question can become discoverable business, legal, health, or personal data.",
+    proof_eyebrow: "What changes",
+    proof_title: "The server should route and bill. It should not read.",
     proof_running_title: "Protected while running",
     proof_running_copy:
       "Confidential GPU execution protects AI code and data while the model is processing it, not only while files are stored or sent over the network.",
@@ -26,6 +35,10 @@ export const I18N = {
     proof_open_title: "Open client path",
     proof_open_copy:
       "The downloadable client is built from public source so users can compile it, calculate its checksum, and compare it with the published release.",
+    enclave_eyebrow: "Trust, but verify",
+    enclave_title: "Before secrets move, the client checks the secure environment.",
+    enclave_copy:
+      "The client fetches fresh attestation evidence, checks the model encryption key, encrypts locally, and shows proof hashes after the response. You can use the public client source to build the same user client and compare checksums.",
     balance: "Balance",
     status: "Status",
     checking: "Checking",
@@ -101,9 +114,12 @@ export const I18N = {
     login: "Iniciar sesion",
     logout: "Cerrar sesion",
     landing_eyebrow: "IA confidencial",
-    landing_title: "Tus prompts deben seguir siendo tuyos.",
+    landing_title: "La IA es poderosa. Tus datos privados son el precio si no los proteges.",
     landing_copy:
-      "Trust AI cifra tu solicitud antes de que salga de tu dispositivo, la procesa dentro de infraestructura NVIDIA GPU protegida por hardware y devuelve la respuesta cifrada. El servidor enruta el trabajo y gestiona la facturacion; no deberia ver tu prompt, archivos, imagenes, video, audio ni respuesta del modelo sin cifrar.",
+      "Los prompts suelen contener nombres de clientes, contratos, codigo fuente, datos medicos, planes financieros, productos no anunciados y archivos privados. Trust AI los cifra en tu dispositivo, envia solo texto cifrado por nuestro servidor y descifra la respuesta solo en tu navegador.",
+    hero_point_1: "Sin prompts en claro en nuestro gateway",
+    hero_point_2: "Ejecucion en GPU NVIDIA protegida por hardware",
+    hero_point_3: "Cliente abierto con verificacion de checksum",
     continue_google: "Continuar con Google",
     continue_apple: "Continuar con Apple",
     loading_signin: "Cargando inicio de sesion.",
@@ -111,6 +127,12 @@ export const I18N = {
     signin_unconfigured: "El inicio de sesion no esta configurado.",
     signin_opening: "Abriendo inicio de sesion.",
     signin_required: "Inicia sesion para ver modelos, saldo, pagos y uso.",
+    risk_eyebrow: "Por que importa",
+    risk_title: "Una solicitud normal de IA puede convertirse en una copia permanente de tu trabajo sensible.",
+    risk_copy:
+      "Tu prompt puede pasar por logs de aplicacion, herramientas de depuracion, colas, cuentas de proveedores, sistemas de soporte y politicas de retencion antes de que el modelo responda. Si ese texto se puede leer en cualquier punto del camino, una pregunta privada puede convertirse en datos comerciales, legales, medicos o personales descubribles.",
+    proof_eyebrow: "Que cambia",
+    proof_title: "El servidor debe enrutar y facturar. No debe leer.",
     proof_running_title: "Proteccion durante la ejecucion",
     proof_running_copy:
       "La ejecucion confidencial en GPU protege el codigo de IA y los datos mientras el modelo los procesa, no solo cuando se guardan o se envian por la red.",
@@ -120,6 +142,10 @@ export const I18N = {
     proof_open_title: "Cliente abierto",
     proof_open_copy:
       "El cliente descargable se construye desde codigo publico para que los usuarios puedan compilarlo, calcular su checksum y compararlo con la version publicada.",
+    enclave_eyebrow: "Confia, pero verifica",
+    enclave_title: "Antes de mover secretos, el cliente comprueba el entorno seguro.",
+    enclave_copy:
+      "El cliente obtiene evidencia de atestacion reciente, comprueba la clave de cifrado del modelo, cifra localmente y muestra hashes de prueba despues de la respuesta. Puedes usar el codigo publico del cliente para construir el mismo cliente de usuario y comparar checksums.",
     balance: "Saldo",
     status: "Estado",
     checking: "Comprobando",
@@ -195,9 +221,12 @@ export const I18N = {
     login: "Войти",
     logout: "Выйти",
     landing_eyebrow: "Конфиденциальный AI",
-    landing_title: "Ваши промпты должны оставаться вашими.",
+    landing_title: "AI силен. Если не защититься, ценой становятся ваши приватные данные.",
     landing_copy:
-      "Trust AI шифрует запрос до выхода с вашего устройства, обрабатывает его в аппаратно защищенной инфраструктуре NVIDIA GPU и возвращает ответ зашифрованным. Сервер только маршрутизирует работу и ведет биллинг; он не должен видеть незашифрованные промпты, файлы, изображения, видео, аудио или ответ модели.",
+      "Промпты часто содержат имена клиентов, договоры, исходный код, медицинские детали, финансовые планы, еще не выпущенные продукты и приватные файлы. Trust AI шифрует их на вашем устройстве, отправляет через наш сервер только ciphertext и расшифровывает ответ только в вашем браузере.",
+    hero_point_1: "Нет открытых промптов в нашем gateway",
+    hero_point_2: "Выполнение на аппаратно защищенных NVIDIA GPU",
+    hero_point_3: "Открытый клиент с проверкой checksum",
     continue_google: "Войти через Google",
     continue_apple: "Войти через Apple",
     loading_signin: "Загружаем вход.",
@@ -205,6 +234,12 @@ export const I18N = {
     signin_unconfigured: "Вход не настроен.",
     signin_opening: "Открываем вход.",
     signin_required: "Войдите, чтобы видеть модели, баланс, платежи и использование.",
+    risk_eyebrow: "Почему это важно",
+    risk_title: "Обычный AI-запрос может стать постоянной копией вашей чувствительной работы.",
+    risk_copy:
+      "Промпт может пройти через логи приложения, инструменты отладки, очереди, аккаунты поставщиков, системы поддержки и политики хранения до того, как модель ответит. Если этот текст где-то по пути читаем, приватный вопрос может стать доступными бизнес-, юридическими, медицинскими или личными данными.",
+    proof_eyebrow: "Что меняется",
+    proof_title: "Сервер должен маршрутизировать и считать оплату. Читать он не должен.",
     proof_running_title: "Защита во время работы",
     proof_running_copy:
       "Конфиденциальное выполнение на GPU защищает AI-код и данные, пока модель их обрабатывает, а не только при хранении или передаче по сети.",
@@ -214,6 +249,10 @@ export const I18N = {
     proof_open_title: "Открытый клиент",
     proof_open_copy:
       "Скачиваемый клиент собирается из публичного кода, чтобы пользователи могли собрать его, посчитать checksum и сравнить с опубликованным релизом.",
+    enclave_eyebrow: "Доверяй, но проверяй",
+    enclave_title: "До передачи секретов клиент проверяет безопасную среду.",
+    enclave_copy:
+      "Клиент получает свежую аттестацию, проверяет ключ шифрования модели, шифрует локально и показывает proof-хэши после ответа. Вы можете использовать публичный исходный код клиента, собрать тот же клиент и сравнить checksum.",
     balance: "Баланс",
     status: "Статус",
     checking: "Проверка",
