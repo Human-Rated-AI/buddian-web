@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#f7f8fa">
-    <meta name="description" content="Trust AI protects AI requests with client-side encryption and secure NVIDIA GPU execution.">
+    <meta name="description" content="Trust AI protects AI requests with client-side encryption and secure GPU execution.">
     <title>Trust AI</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
@@ -12,9 +12,10 @@
     <header class="topbar">
       <div class="brand">
         <h1 data-i18n="app_name">Trust AI</h1>
-        <p id="topbar-subtitle" class="subline" data-i18n="subtitle">Private AI requests on secure NVIDIA GPUs</p>
+        <p id="topbar-subtitle" class="subline" data-i18n="subtitle">Private AI requests on secure GPUs</p>
       </div>
       <div class="top-actions">
+        <a class="top-link" href="#how-it-works" data-i18n="how_it_works">How it works</a>
         <div id="global-language-switch" class="global-language-switch" role="group" aria-label="Language">
           <button class="global-language-button" type="button" data-lang="en" aria-pressed="false">EN</button>
           <button class="global-language-button" type="button" data-lang="es" aria-pressed="false">ES</button>
@@ -36,14 +37,15 @@
             </p>
             <div class="hero-points">
               <span data-i18n="hero_point_1">No plaintext prompts in our gateway</span>
-              <span data-i18n="hero_point_2">Hardware-protected NVIDIA GPU execution</span>
+              <span data-i18n="hero_point_2">Hardware-protected GPU execution</span>
               <span data-i18n="hero_point_3">Open client build with checksum verification</span>
             </div>
             <div class="actions">
               <button id="google-login" type="button" data-i18n="continue_google">Continue with Google</button>
               <button id="apple-login" class="secondary-button" type="button" data-i18n="continue_apple">Continue with Apple</button>
             </div>
-            <p id="auth-note" class="note" data-i18n="loading_signin">Loading sign-in.</p>
+            <a class="learn-link" href="#how-it-works" data-i18n="see_how_it_works">See how it works</a>
+            <p id="auth-note" class="note" aria-live="polite"></p>
           </div>
         </div>
 
@@ -56,6 +58,57 @@
             </p>
           </div>
           <img class="risk-image" src="/assets/generated/data-exposure-risk.webp" alt="" width="1536" height="864" loading="lazy" aria-hidden="true">
+        </section>
+
+        <section id="how-it-works" class="how-section">
+          <div class="how-intro">
+            <p class="eyebrow" data-i18n="how_eyebrow">How it works</p>
+            <h2 data-i18n="how_title">Privacy should not depend on trusting the server operator.</h2>
+            <p data-i18n="how_copy">
+              GPU confidential computing creates a protected place where AI work can run while the request stays isolated from cloud operators, administrators, and ordinary server software. In plain terms: your browser locks the request, the server routes the locked box, the protected GPU opens it only inside the secure environment, and the answer is locked again before it returns.
+            </p>
+            <div class="resource-links" aria-label="Related resources">
+              <a href="https://www.nvidia.com/en-us/data-center/solutions/confidential-computing/" target="_blank" rel="noopener" data-i18n="how_link_nvidia">NVIDIA confidential computing</a>
+              <a href="https://phala.com/posts/Phala-GPU-TEE-Deep-Dive" target="_blank" rel="noopener" data-i18n="how_link_deep_dive">GPU TEE deep dive</a>
+              <a href="https://docs.phala.com/phala-cloud/confidential-ai/gpu-tee-deployment-guide" target="_blank" rel="noopener" data-i18n="how_link_deploy">GPU TEE deployment guide</a>
+            </div>
+          </div>
+
+          <article class="how-card">
+            <img src="/assets/generated/how-client-encrypts.webp" alt="" width="1024" height="768" loading="lazy" aria-hidden="true">
+            <div>
+              <span>01</span>
+              <h3 data-i18n="how_step_1_title">Your browser locks the request first</h3>
+              <p data-i18n="how_step_1_copy">The prompt is encrypted on your device before it leaves the page. Our gateway receives ciphertext, not the readable question.</p>
+            </div>
+          </article>
+
+          <article class="how-card">
+            <img src="/assets/generated/how-ciphertext-route.webp" alt="" width="1024" height="768" loading="lazy" aria-hidden="true">
+            <div>
+              <span>02</span>
+              <h3 data-i18n="how_step_2_title">The server routes and bills without reading</h3>
+              <p data-i18n="how_step_2_copy">The backend checks balance, forwards the encrypted request, and records only operational metadata such as model, estimates, and proof hashes.</p>
+            </div>
+          </article>
+
+          <article class="how-card">
+            <img src="/assets/generated/verified-enclave.webp" alt="" width="1536" height="864" loading="lazy" aria-hidden="true">
+            <div>
+              <span>03</span>
+              <h3 data-i18n="how_step_3_title">Protected GPU compute opens it only inside the secure environment</h3>
+              <p data-i18n="how_step_3_copy">The model runs inside hardware-protected compute. Attestation is the proof that the expected secure environment exists before secrets are sent.</p>
+            </div>
+          </article>
+
+          <article class="how-card">
+            <img src="/assets/generated/how-verify-proof.webp" alt="" width="1024" height="768" loading="lazy" aria-hidden="true">
+            <div>
+              <span>04</span>
+              <h3 data-i18n="how_step_4_title">The answer comes back locked</h3>
+              <p data-i18n="how_step_4_copy">The response is returned encrypted and decrypted only in your browser. The client also shows hashes and signature data so the path can be checked.</p>
+            </div>
+          </article>
         </section>
 
         <section class="proof-band">

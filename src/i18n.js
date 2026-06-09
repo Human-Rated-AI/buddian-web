@@ -3,7 +3,9 @@ export const SUPPORTED_LANGUAGES = new Set(["en", "es", "ru"]);
 export const I18N = {
   en: {
     app_name: "Trust AI",
-    subtitle: "Private AI requests on secure NVIDIA GPUs",
+    subtitle: "Private AI requests on secure GPUs",
+    how_it_works: "How it works",
+    see_how_it_works: "See how it works",
     login: "Log in",
     logout: "Log out",
     landing_eyebrow: "Confidential AI",
@@ -11,11 +13,10 @@ export const I18N = {
     landing_copy:
       "Prompts often contain client names, contracts, source code, medical details, financial plans, unreleased products, and private files. Trust AI encrypts them on your device, sends only ciphertext through our server, and decrypts the answer only in your browser.",
     hero_point_1: "No plaintext prompts in our gateway",
-    hero_point_2: "Hardware-protected NVIDIA GPU execution",
+    hero_point_2: "Hardware-protected GPU execution",
     hero_point_3: "Open client build with checksum verification",
     continue_google: "Continue with Google",
     continue_apple: "Continue with Apple",
-    loading_signin: "Loading sign-in.",
     signin_continue: "Sign in to continue.",
     signin_unconfigured: "Sign-in is not configured.",
     signin_opening: "Opening sign-in.",
@@ -24,6 +25,25 @@ export const I18N = {
     risk_title: "A normal AI request can become a permanent copy of your sensitive work.",
     risk_copy:
       "Your prompt may pass through application logs, debugging tools, queues, vendor accounts, support systems, and retention policies before a model answers. If that text is readable anywhere along the path, a private question can become discoverable business, legal, health, or personal data.",
+    how_eyebrow: "How it works",
+    how_title: "Privacy should not depend on trusting the server operator.",
+    how_copy:
+      "GPU confidential computing creates a protected place where AI work can run while the request stays isolated from cloud operators, administrators, and ordinary server software. In plain terms: your browser locks the request, the server routes the locked box, the protected GPU opens it only inside the secure environment, and the answer is locked again before it returns.",
+    how_link_nvidia: "NVIDIA confidential computing",
+    how_link_deep_dive: "GPU TEE deep dive",
+    how_link_deploy: "GPU TEE deployment guide",
+    how_step_1_title: "Your browser locks the request first",
+    how_step_1_copy:
+      "The prompt is encrypted on your device before it leaves the page. Our gateway receives ciphertext, not the readable question.",
+    how_step_2_title: "The server routes and bills without reading",
+    how_step_2_copy:
+      "The backend checks balance, forwards the encrypted request, and records only operational metadata such as model, estimates, and proof hashes.",
+    how_step_3_title: "Protected GPU compute opens it only inside the secure environment",
+    how_step_3_copy:
+      "The model runs inside hardware-protected compute. Attestation is the proof that the expected secure environment exists before secrets are sent.",
+    how_step_4_title: "The answer comes back locked",
+    how_step_4_copy:
+      "The response is returned encrypted and decrypted only in your browser. The client also shows hashes and signature data so the path can be checked.",
     proof_eyebrow: "What changes",
     proof_title: "The server should route and bill. It should not read.",
     proof_running_title: "Protected while running",
@@ -110,7 +130,9 @@ export const I18N = {
   },
   es: {
     app_name: "Trust AI",
-    subtitle: "Solicitudes privadas de IA en GPU NVIDIA seguras",
+    subtitle: "Solicitudes privadas de IA en GPUs seguras",
+    how_it_works: "Como funciona",
+    see_how_it_works: "Ver como funciona",
     login: "Iniciar sesion",
     logout: "Cerrar sesion",
     landing_eyebrow: "IA confidencial",
@@ -118,11 +140,10 @@ export const I18N = {
     landing_copy:
       "Los prompts suelen contener nombres de clientes, contratos, codigo fuente, datos medicos, planes financieros, productos no anunciados y archivos privados. Trust AI los cifra en tu dispositivo, envia solo texto cifrado por nuestro servidor y descifra la respuesta solo en tu navegador.",
     hero_point_1: "Sin prompts en claro en nuestro gateway",
-    hero_point_2: "Ejecucion en GPU NVIDIA protegida por hardware",
+    hero_point_2: "Ejecucion en GPU protegida por hardware",
     hero_point_3: "Cliente abierto con verificacion de checksum",
     continue_google: "Continuar con Google",
     continue_apple: "Continuar con Apple",
-    loading_signin: "Cargando inicio de sesion.",
     signin_continue: "Inicia sesion para continuar.",
     signin_unconfigured: "El inicio de sesion no esta configurado.",
     signin_opening: "Abriendo inicio de sesion.",
@@ -131,6 +152,25 @@ export const I18N = {
     risk_title: "Una solicitud normal de IA puede convertirse en una copia permanente de tu trabajo sensible.",
     risk_copy:
       "Tu prompt puede pasar por logs de aplicacion, herramientas de depuracion, colas, cuentas de proveedores, sistemas de soporte y politicas de retencion antes de que el modelo responda. Si ese texto se puede leer en cualquier punto del camino, una pregunta privada puede convertirse en datos comerciales, legales, medicos o personales descubribles.",
+    how_eyebrow: "Como funciona",
+    how_title: "La privacidad no debe depender de confiar en quien opera el servidor.",
+    how_copy:
+      "La computacion confidencial en GPU crea un lugar protegido donde la IA puede ejecutarse mientras la solicitud queda aislada de operadores cloud, administradores y software normal del servidor. En palabras simples: tu navegador cierra la solicitud, el servidor enruta la caja cerrada, la GPU protegida la abre solo dentro del entorno seguro y la respuesta vuelve cerrada.",
+    how_link_nvidia: "Computacion confidencial de NVIDIA",
+    how_link_deep_dive: "Deep dive de GPU TEE",
+    how_link_deploy: "Guia de despliegue GPU TEE",
+    how_step_1_title: "Tu navegador cierra la solicitud primero",
+    how_step_1_copy:
+      "El prompt se cifra en tu dispositivo antes de salir de la pagina. Nuestro gateway recibe ciphertext, no la pregunta legible.",
+    how_step_2_title: "El servidor enruta y factura sin leer",
+    how_step_2_copy:
+      "El backend comprueba saldo, reenvia la solicitud cifrada y registra solo metadatos operativos como modelo, estimaciones y hashes de prueba.",
+    how_step_3_title: "La computacion GPU protegida la abre solo dentro del entorno seguro",
+    how_step_3_copy:
+      "El modelo corre dentro de computacion protegida por hardware. La atestacion prueba que el entorno seguro esperado existe antes de enviar secretos.",
+    how_step_4_title: "La respuesta vuelve cerrada",
+    how_step_4_copy:
+      "La respuesta vuelve cifrada y se descifra solo en tu navegador. El cliente tambien muestra hashes y datos de firma para poder comprobar la ruta.",
     proof_eyebrow: "Que cambia",
     proof_title: "El servidor debe enrutar y facturar. No debe leer.",
     proof_running_title: "Proteccion durante la ejecucion",
@@ -217,7 +257,9 @@ export const I18N = {
   },
   ru: {
     app_name: "Trust AI",
-    subtitle: "Приватные AI-запросы на защищенных NVIDIA GPU",
+    subtitle: "Приватные AI-запросы на защищенных GPU",
+    how_it_works: "Как это работает",
+    see_how_it_works: "Как это работает",
     login: "Войти",
     logout: "Выйти",
     landing_eyebrow: "Конфиденциальный AI",
@@ -225,11 +267,10 @@ export const I18N = {
     landing_copy:
       "Промпты часто содержат имена клиентов, договоры, исходный код, медицинские детали, финансовые планы, еще не выпущенные продукты и приватные файлы. Trust AI шифрует их на вашем устройстве, отправляет через наш сервер только ciphertext и расшифровывает ответ только в вашем браузере.",
     hero_point_1: "Нет открытых промптов в нашем gateway",
-    hero_point_2: "Выполнение на аппаратно защищенных NVIDIA GPU",
+    hero_point_2: "Выполнение на аппаратно защищенных GPU",
     hero_point_3: "Открытый клиент с проверкой checksum",
     continue_google: "Войти через Google",
     continue_apple: "Войти через Apple",
-    loading_signin: "Загружаем вход.",
     signin_continue: "Войдите, чтобы продолжить.",
     signin_unconfigured: "Вход не настроен.",
     signin_opening: "Открываем вход.",
@@ -238,6 +279,25 @@ export const I18N = {
     risk_title: "Обычный AI-запрос может стать постоянной копией вашей чувствительной работы.",
     risk_copy:
       "Промпт может пройти через логи приложения, инструменты отладки, очереди, аккаунты поставщиков, системы поддержки и политики хранения до того, как модель ответит. Если этот текст где-то по пути читаем, приватный вопрос может стать доступными бизнес-, юридическими, медицинскими или личными данными.",
+    how_eyebrow: "Как это работает",
+    how_title: "Приватность не должна зависеть от доверия к оператору сервера.",
+    how_copy:
+      "Конфиденциальные вычисления на GPU создают защищенное место, где может выполняться AI-задача, а запрос остается изолированным от cloud-операторов, администраторов и обычного серверного ПО. Проще: браузер закрывает запрос на замок, сервер передает закрытую коробку, защищенная GPU открывает ее только внутри безопасной среды, а ответ снова возвращается закрытым.",
+    how_link_nvidia: "Confidential Computing у NVIDIA",
+    how_link_deep_dive: "GPU TEE deep dive",
+    how_link_deploy: "GPU TEE deployment guide",
+    how_step_1_title: "Браузер первым закрывает запрос",
+    how_step_1_copy:
+      "Промпт шифруется на вашем устройстве до выхода со страницы. Наш gateway получает ciphertext, а не читаемый вопрос.",
+    how_step_2_title: "Сервер маршрутизирует и считает оплату, не читая",
+    how_step_2_copy:
+      "Backend проверяет баланс, пересылает зашифрованный запрос и записывает только операционные метаданные: модель, оценки и proof-хэши.",
+    how_step_3_title: "Защищенные GPU-вычисления открывают запрос только внутри безопасной среды",
+    how_step_3_copy:
+      "Модель работает внутри аппаратно защищенного compute. Аттестация доказывает, что ожидаемая безопасная среда существует до отправки секретов.",
+    how_step_4_title: "Ответ возвращается закрытым",
+    how_step_4_copy:
+      "Ответ возвращается зашифрованным и расшифровывается только в вашем браузере. Клиент также показывает хэши и подпись, чтобы путь можно было проверить.",
     proof_eyebrow: "Что меняется",
     proof_title: "Сервер должен маршрутизировать и считать оплату. Читать он не должен.",
     proof_running_title: "Защита во время работы",
