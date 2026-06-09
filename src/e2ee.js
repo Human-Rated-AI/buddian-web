@@ -48,8 +48,14 @@ function concatBytes(...parts) {
   return out;
 }
 
+function secpPublicKeyBytes(value) {
+  const bytes = typeof value === "string" ? hexToBytes(value) : value;
+  if (bytes.length === 64) return concatBytes(new Uint8Array([0x04]), bytes);
+  return bytes;
+}
+
 function sharedSecretX(privateKey, publicKey) {
-  const shared = getSharedSecret(privateKey, publicKey, false);
+  const shared = getSharedSecret(privateKey, secpPublicKeyBytes(publicKey), false);
   if (shared.length === 65) return shared.slice(1, 33);
   if (shared.length === 33) return shared.slice(1, 33);
   if (shared.length === 32) return shared;
@@ -73,7 +79,7 @@ async function deriveAesKey(sharedSecret) {
 }
 
 async function encryptForModel(plaintext, modelPublicKeyHex, aad) {
-  const modelPublicKey = hexToBytes(modelPublicKeyHex);
+  const modelPublicKey = secpPublicKeyBytes(modelPublicKeyHex);
   const ephemeralPrivateKey = randomPrivateKey();
   const ephemeralPublicKey = getPublicKey(ephemeralPrivateKey, false);
   const shared = sharedSecretX(ephemeralPrivateKey, modelPublicKey);
