@@ -14,6 +14,7 @@ const apiBase = (() => {
   if (host.startsWith("api.")) return window.location.origin;
   return `${window.location.protocol}//api.${host}`;
 })();
+const AUTH_LOG_KEY = "trust_auth_trace";
 
 const state = {
   config: null,
@@ -127,6 +128,39 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
+function authTrace(context, details = {}, level = "info") {
+  const entry = {
+    at: new Date().toISOString(),
+    context,
+    details,
+    href: window.location.href,
+  };
+  try {
+    const existing = JSON.parse(localStorage.getItem(AUTH_LOG_KEY) || "[]");
+    const list = Array.isArray(existing) ? existing : [];
+    list.push(entry);
+    localStorage.setItem(AUTH_LOG_KEY, JSON.stringify(list.slice(-40)));
+  } catch {
+    // Ignore storage errors; console output below is still useful.
+  }
+  const method = level === "error" ? "error" : level === "warn" ? "warn" : "info";
+  console[method](`[Trust auth] ${context}`, entry);
+}
+
+function replayAuthTrace() {
+  let entries = [];
+  try {
+    const raw = JSON.parse(localStorage.getItem(AUTH_LOG_KEY) || "[]");
+    entries = Array.isArray(raw) ? raw : [];
+  } catch {
+    entries = [];
+  }
+  if (!entries.length) return;
+  console.groupCollapsed(`[Trust auth] previous auth trace (${entries.length})`);
+  entries.forEach((entry) => console.info(`[Trust auth] ${entry.context}`, entry));
+  console.groupEnd();
+}
+
 async function api(path, options = {}) {
   const headers = { ...(options.headers || {}) };
   if (state.token) headers.Authorization = `Bearer ${state.token}`;
@@ -156,7 +190,7 @@ async function api(path, options = {}) {
 }
 
 function logAuthError(context, error, extra = {}) {
-  console.error(`[Trust auth] ${context}`, {
+  authTrace(context, {
     message: error?.message || String(error),
     code: error?.code,
     name: error?.name,
@@ -165,7 +199,7 @@ function logAuthError(context, error, extra = {}) {
     body: error?.body,
     stack: error?.stack,
     ...extra,
-  });
+  }, "error");
 }
 
 function firebaseConfigured() {
@@ -187,11 +221,17 @@ function firebaseConfig() {
 }
 
 async function initFirebase() {
+  authTrace("Firebase init requested", {
+    configured: firebaseConfigured(),
+    authReady: Boolean(state.firebase.auth),
+    initInProgress: Boolean(state.firebase.initPromise),
+  });
   if (!firebaseConfigured()) return false;
   if (state.firebase.auth) return true;
   if (state.firebase.initPromise) return state.firebase.initPromise;
 
   state.firebase.initPromise = (async () => {
+    authTrace("Loading Firebase SDK modules");
     const [appModule, authModule, analyticsModule] = await Promise.all([
       import("https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"),
       import("https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js"),
@@ -203,9 +243,18 @@ async function initFirebase() {
     state.firebase.auth.languageCode = state.language;
     authModule.onAuthStateChanged(state.firebase.auth, (user) => {
       state.firebase.user = user || null;
+      authTrace("Firebase auth state changed", {
+        hasUser: Boolean(user),
+        firebaseUid: user?.uid || "",
+        email: user?.email || "",
+        providerData: (user?.providerData || []).map((item) => item.providerId),
+      });
       if (user && !state.token && !state.account) {
         completeFirebaseAuthOnce(user, "Backend session exchange failed from Firebase auth state").catch(() => {});
       }
+    });
+    authTrace("Checking Firebase redirect result", {
+      pendingProvider: localStorage.getItem("trust_firebase_auth_provider") || "",
     });
     const redirectResult = await authModule.getRedirectResult(state.firebase.auth).catch((error) => {
       logAuthError("Firebase redirect result failed", error, {
@@ -219,6 +268,14 @@ async function initFirebase() {
       await completeFirebaseAuthOnce(redirectResult.user, "Backend session exchange failed after redirect", {
         providerId: redirectResult.providerId || "",
       });
+    }
+    if (!redirectResult?.user && localStorage.getItem("trust_firebase_auth_provider")) {
+      authTrace("No Firebase redirect result found after return", {
+        pendingProvider: localStorage.getItem("trust_firebase_auth_provider") || "",
+        hasCurrentUser: Boolean(state.firebase.auth.currentUser),
+        currentUid: state.firebase.auth.currentUser?.uid || "",
+        currentEmail: state.firebase.auth.currentUser?.email || "",
+      }, "warn");
     }
     if (firebaseConfig().measurementId) {
       try {
@@ -256,6 +313,11 @@ function firebaseProvider(providerName) {
 }
 
 async function completeFirebaseAuth(firebaseUser) {
+  authTrace("Starting backend session exchange", {
+    firebaseUid: firebaseUser?.uid || "",
+    email: firebaseUser?.email || "",
+    providerData: (firebaseUser?.providerData || []).map((item) => item.providerId),
+  });
   let idToken = "";
   try {
     idToken = await firebaseUser.getIdToken(true);
@@ -282,6 +344,11 @@ async function completeFirebaseAuth(firebaseUser) {
   state.token = data.session_token;
   state.account = data.account;
   localStorage.setItem("trust_session", state.token);
+  localStorage.removeItem("trust_firebase_auth_provider");
+  authTrace("Backend session exchange succeeded", {
+    accountEmail: state.account?.user?.email || "",
+    accountName: state.account?.user?.display_name || "",
+  });
   await afterLogin();
 }
 
@@ -306,13 +373,40 @@ async function completeFirebaseAuthOnce(firebaseUser, context, extra = {}) {
 async function signIn(providerName) {
   closeAuthMenu();
   el.authNote.textContent = t("signin_opening");
+  authTrace("Provider selected", { provider: providerName });
   try {
     const ready = await initFirebase();
     if (!ready) throw new Error(t("signin_unconfigured"));
     const authModule = state.firebase.modules.authModule;
     const provider = firebaseProvider(providerName);
     localStorage.setItem("trust_firebase_auth_provider", providerName);
-    await authModule.signInWithRedirect(state.firebase.auth, provider);
+    authTrace("Opening Firebase popup", { provider: providerName });
+    try {
+      const result = await authModule.signInWithPopup(state.firebase.auth, provider);
+      authTrace("Firebase popup returned user", {
+        provider: providerName,
+        providerId: result.providerId || "",
+        firebaseUid: result.user?.uid || "",
+        email: result.user?.email || "",
+      });
+      await completeFirebaseAuthOnce(result.user, "Backend session exchange failed after popup", {
+        provider: providerName,
+        providerId: result.providerId || "",
+      });
+    } catch (popupError) {
+      logAuthError("Firebase popup sign-in failed", popupError, { provider: providerName });
+      const redirectFallbackCodes = new Set([
+        "auth/popup-blocked",
+        "auth/cancelled-popup-request",
+        "auth/operation-not-supported-in-this-environment",
+      ]);
+      if (!redirectFallbackCodes.has(popupError?.code)) throw popupError;
+      authTrace("Falling back to Firebase redirect", {
+        provider: providerName,
+        popupCode: popupError?.code || "",
+      }, "warn");
+      await authModule.signInWithRedirect(state.firebase.auth, provider);
+    }
   } catch (error) {
     logAuthError("Provider sign-in launch failed", error, { provider: providerName });
     throw error;
@@ -754,6 +848,11 @@ window.TrustApp = {
 };
 
 (async function main() {
+  replayAuthTrace();
+  authTrace("Trust app loaded", {
+    hasSessionToken: Boolean(state.token),
+    pendingProvider: localStorage.getItem("trust_firebase_auth_provider") || "",
+  });
   applyTranslations();
   await loadConfig().catch(showAuthError);
   if (state.token) {
