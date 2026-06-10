@@ -276,6 +276,7 @@ async function initFirebase() {
         currentUid: state.firebase.auth.currentUser?.uid || "",
         currentEmail: state.firebase.auth.currentUser?.email || "",
       }, "warn");
+      if (!state.firebase.auth.currentUser) localStorage.removeItem("trust_firebase_auth_provider");
     }
     if (firebaseConfig().measurementId) {
       try {
@@ -374,43 +375,49 @@ async function signIn(providerName) {
   closeAuthMenu();
   el.authNote.textContent = t("signin_opening");
   authTrace("Provider selected", { provider: providerName });
+  let authModule;
+  let provider;
   try {
     const ready = await initFirebase();
     if (!ready) throw new Error(t("signin_unconfigured"));
-    const authModule = state.firebase.modules.authModule;
-    const provider = firebaseProvider(providerName);
-    localStorage.setItem("trust_firebase_auth_provider", providerName);
-    authTrace("Opening Firebase popup", { provider: providerName });
-    try {
-      const result = await authModule.signInWithPopup(state.firebase.auth, provider);
-      authTrace("Firebase popup returned user", {
-        provider: providerName,
-        providerId: result.providerId || "",
-        firebaseUid: result.user?.uid || "",
-        email: result.user?.email || "",
-      });
-      await completeFirebaseAuthOnce(result.user, "Backend session exchange failed after popup", {
-        provider: providerName,
-        providerId: result.providerId || "",
-      });
-    } catch (popupError) {
-      logAuthError("Firebase popup sign-in failed", popupError, { provider: providerName });
-      const redirectFallbackCodes = new Set([
-        "auth/popup-blocked",
-        "auth/cancelled-popup-request",
-        "auth/operation-not-supported-in-this-environment",
-      ]);
-      if (!redirectFallbackCodes.has(popupError?.code)) throw popupError;
-      authTrace("Falling back to Firebase redirect", {
-        provider: providerName,
-        popupCode: popupError?.code || "",
-      }, "warn");
-      await authModule.signInWithRedirect(state.firebase.auth, provider);
-    }
+    authModule = state.firebase.modules.authModule;
+    provider = firebaseProvider(providerName);
   } catch (error) {
     logAuthError("Provider sign-in launch failed", error, { provider: providerName });
     throw error;
   }
+
+  localStorage.setItem("trust_firebase_auth_provider", providerName);
+  authTrace("Opening Firebase popup", { provider: providerName });
+  let result;
+  try {
+    result = await authModule.signInWithPopup(state.firebase.auth, provider);
+  } catch (popupError) {
+    logAuthError("Firebase popup sign-in failed", popupError, { provider: providerName });
+    const redirectFallbackCodes = new Set([
+      "auth/popup-blocked",
+      "auth/cancelled-popup-request",
+      "auth/operation-not-supported-in-this-environment",
+    ]);
+    if (!redirectFallbackCodes.has(popupError?.code)) throw popupError;
+    authTrace("Falling back to Firebase redirect", {
+      provider: providerName,
+      popupCode: popupError?.code || "",
+    }, "warn");
+    await authModule.signInWithRedirect(state.firebase.auth, provider);
+    return;
+  }
+
+  authTrace("Firebase popup returned user", {
+    provider: providerName,
+    providerId: result.providerId || "",
+    firebaseUid: result.user?.uid || "",
+    email: result.user?.email || "",
+  });
+  await completeFirebaseAuthOnce(result.user, "Backend session exchange failed after popup", {
+    provider: providerName,
+    providerId: result.providerId || "",
+  });
 }
 
 function logout() {
