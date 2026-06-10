@@ -28,6 +28,7 @@ const state = {
     auth: null,
     analytics: null,
     initPromise: null,
+    sessionPromise: null,
   },
 };
 
@@ -41,6 +42,7 @@ const el = {
   authButton: $("#auth-button"),
   authAvatar: $("#auth-avatar"),
   authName: $("#auth-name"),
+  authMenu: $("#auth-menu"),
   logoutButton: $("#logout-button"),
   authNote: $("#auth-note"),
   googleLogin: $("#google-login"),
@@ -144,9 +146,26 @@ async function api(path, options = {}) {
     }
   }
   if (!response.ok) {
-    throw new Error(body.detail?.message || body.detail || response.statusText);
+    const error = new Error(body.detail?.message || body.detail || response.statusText);
+    error.status = response.status;
+    error.path = path;
+    error.body = body;
+    throw error;
   }
   return body;
+}
+
+function logAuthError(context, error, extra = {}) {
+  console.error(`[Trust auth] ${context}`, {
+    message: error?.message || String(error),
+    code: error?.code,
+    name: error?.name,
+    status: error?.status,
+    path: error?.path,
+    body: error?.body,
+    stack: error?.stack,
+    ...extra,
+  });
 }
 
 function firebaseConfigured() {
@@ -184,14 +203,22 @@ async function initFirebase() {
     state.firebase.auth.languageCode = state.language;
     authModule.onAuthStateChanged(state.firebase.auth, (user) => {
       state.firebase.user = user || null;
+      if (user && !state.token && !state.account) {
+        completeFirebaseAuthOnce(user, "Backend session exchange failed from Firebase auth state").catch(() => {});
+      }
     });
     const redirectResult = await authModule.getRedirectResult(state.firebase.auth).catch((error) => {
+      logAuthError("Firebase redirect result failed", error, {
+        provider: localStorage.getItem("trust_firebase_auth_provider") || "",
+      });
       showAuthError(error);
       return null;
     });
     if (redirectResult?.user) {
       localStorage.removeItem("trust_firebase_auth_provider");
-      await completeFirebaseAuth(redirectResult.user);
+      await completeFirebaseAuthOnce(redirectResult.user, "Backend session exchange failed after redirect", {
+        providerId: redirectResult.providerId || "",
+      });
     }
     if (firebaseConfig().measurementId) {
       try {
@@ -229,25 +256,67 @@ function firebaseProvider(providerName) {
 }
 
 async function completeFirebaseAuth(firebaseUser) {
-  const idToken = await firebaseUser.getIdToken(true);
-  const data = await api("/web/auth/firebase", {
-    method: "POST",
-    body: { id_token: idToken },
-  });
+  let idToken = "";
+  try {
+    idToken = await firebaseUser.getIdToken(true);
+  } catch (error) {
+    logAuthError("Firebase ID token fetch failed", error, {
+      firebaseUid: firebaseUser?.uid || "",
+      email: firebaseUser?.email || "",
+    });
+    throw error;
+  }
+  let data;
+  try {
+    data = await api("/web/auth/firebase", {
+      method: "POST",
+      body: { id_token: idToken },
+    });
+  } catch (error) {
+    logAuthError("Backend session exchange failed", error, {
+      firebaseUid: firebaseUser?.uid || "",
+      email: firebaseUser?.email || "",
+    });
+    throw error;
+  }
   state.token = data.session_token;
   state.account = data.account;
   localStorage.setItem("trust_session", state.token);
   await afterLogin();
 }
 
+async function completeFirebaseAuthOnce(firebaseUser, context, extra = {}) {
+  if (state.firebase.sessionPromise) return state.firebase.sessionPromise;
+  state.firebase.sessionPromise = completeFirebaseAuth(firebaseUser)
+    .catch((error) => {
+      logAuthError(context, error, {
+        firebaseUid: firebaseUser?.uid || "",
+        email: firebaseUser?.email || "",
+        ...extra,
+      });
+      showAuthError(error);
+      throw error;
+    })
+    .finally(() => {
+      state.firebase.sessionPromise = null;
+    });
+  return state.firebase.sessionPromise;
+}
+
 async function signIn(providerName) {
+  closeAuthMenu();
   el.authNote.textContent = t("signin_opening");
-  const ready = await initFirebase();
-  if (!ready) throw new Error(t("signin_unconfigured"));
-  const authModule = state.firebase.modules.authModule;
-  const provider = firebaseProvider(providerName);
-  localStorage.setItem("trust_firebase_auth_provider", providerName);
-  await authModule.signInWithRedirect(state.firebase.auth, provider);
+  try {
+    const ready = await initFirebase();
+    if (!ready) throw new Error(t("signin_unconfigured"));
+    const authModule = state.firebase.modules.authModule;
+    const provider = firebaseProvider(providerName);
+    localStorage.setItem("trust_firebase_auth_provider", providerName);
+    await authModule.signInWithRedirect(state.firebase.auth, provider);
+  } catch (error) {
+    logAuthError("Provider sign-in launch failed", error, { provider: providerName });
+    throw error;
+  }
 }
 
 function logout() {
@@ -272,10 +341,27 @@ function accountInitials(name) {
   return `${first}${second}`.toUpperCase();
 }
 
+function closeAuthMenu() {
+  el.authMenu.classList.add("hidden");
+  el.authButton.setAttribute("aria-expanded", "false");
+}
+
+function toggleAuthMenu() {
+  if (state.token && state.account) return;
+  if (!firebaseConfigured()) {
+    el.authNote.textContent = t("signin_unconfigured");
+    console.error("[Trust auth] Firebase sign-in requested but Firebase is not configured");
+    return;
+  }
+  const hidden = el.authMenu.classList.toggle("hidden");
+  el.authButton.setAttribute("aria-expanded", hidden ? "false" : "true");
+}
+
 function renderAuthHeader(loggedIn) {
   el.logoutButton.classList.toggle("hidden", !loggedIn);
   el.authButton.classList.toggle("logged-in", loggedIn);
-  el.authButton.onclick = loggedIn ? null : () => signIn("google").catch(showAuthError);
+  if (loggedIn) closeAuthMenu();
+  el.authButton.onclick = loggedIn ? null : toggleAuthMenu;
   el.authButton.setAttribute("aria-label", loggedIn ? t("account") : t("login"));
 
   if (!loggedIn) {
@@ -383,6 +469,7 @@ function renderUsage() {
 }
 
 function showAuthError(error) {
+  logAuthError("Visible auth error", error);
   el.authNote.textContent = error.message || "Sign-in failed.";
 }
 
@@ -654,6 +741,10 @@ window.addEventListener("popstate", renderRoute);
 document.addEventListener("click", (event) => {
   const languageButton = event.target.closest(".global-language-button");
   if (languageButton) setLanguage(languageButton.dataset.lang || "en");
+  if (!event.target.closest("#auth-control")) closeAuthMenu();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeAuthMenu();
 });
 
 window.TrustApp = {

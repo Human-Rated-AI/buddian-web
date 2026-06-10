@@ -117,6 +117,7 @@ button:disabled {
 }
 
 .auth-control {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -170,6 +171,33 @@ button:disabled {
 .logout-button {
   width: auto;
   min-width: 76px;
+}
+
+.auth-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 8px;
+  width: min(250px, calc(100vw - 24px));
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(16, 24, 40, 0.16);
+}
+
+.auth-menu-item {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: var(--ink);
+  text-align: left;
+}
+
+.auth-menu-item:hover {
+  background: #f2f4f7;
 }
 
 .top-link,
@@ -348,11 +376,6 @@ textarea {
   padding: 7px 10px;
   font-size: 12px;
   font-weight: 760;
-}
-
-.actions {
-  display: grid;
-  gap: 10px;
 }
 
 .hero .secondary-button {
@@ -707,7 +730,6 @@ textarea {
     padding: 20px 24px 36px;
   }
 
-  .actions,
   .toolbar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
