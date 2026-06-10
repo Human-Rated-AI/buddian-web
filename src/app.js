@@ -39,6 +39,9 @@ const el = {
   appShell: $("#app-shell"),
   extensionShell: $("#extension-shell"),
   authButton: $("#auth-button"),
+  authAvatar: $("#auth-avatar"),
+  authName: $("#auth-name"),
+  logoutButton: $("#logout-button"),
   authNote: $("#auth-note"),
   googleLogin: $("#google-login"),
   appleLogin: $("#apple-login"),
@@ -76,6 +79,7 @@ function setLanguage(value) {
   state.language = normalizeLanguage(value);
   localStorage.setItem("trust_language", state.language);
   applyTranslations();
+  renderRoute();
 }
 
 function applyTranslations(root = document) {
@@ -178,8 +182,17 @@ async function initFirebase() {
     state.firebase.app = appModule.initializeApp(firebaseConfig());
     state.firebase.auth = authModule.getAuth(state.firebase.app);
     state.firebase.auth.languageCode = state.language;
-    const redirectResult = await authModule.getRedirectResult(state.firebase.auth).catch(() => null);
-    if (redirectResult?.user) await completeFirebaseAuth(redirectResult.user);
+    authModule.onAuthStateChanged(state.firebase.auth, (user) => {
+      state.firebase.user = user || null;
+    });
+    const redirectResult = await authModule.getRedirectResult(state.firebase.auth).catch((error) => {
+      showAuthError(error);
+      return null;
+    });
+    if (redirectResult?.user) {
+      localStorage.removeItem("trust_firebase_auth_provider");
+      await completeFirebaseAuth(redirectResult.user);
+    }
     if (firebaseConfig().measurementId) {
       try {
         const supported = await analyticsModule.isSupported();
@@ -233,21 +246,57 @@ async function signIn(providerName) {
   if (!ready) throw new Error(t("signin_unconfigured"));
   const authModule = state.firebase.modules.authModule;
   const provider = firebaseProvider(providerName);
-  try {
-    const result = await authModule.signInWithPopup(state.firebase.auth, provider);
-    await completeFirebaseAuth(result.user);
-  } catch (error) {
-    if (!["auth/popup-blocked", "auth/cancelled-popup-request"].includes(error?.code)) throw error;
-    await authModule.signInWithRedirect(state.firebase.auth, provider);
-  }
+  localStorage.setItem("trust_firebase_auth_provider", providerName);
+  await authModule.signInWithRedirect(state.firebase.auth, provider);
 }
 
 function logout() {
   localStorage.removeItem("trust_session");
+  localStorage.removeItem("trust_firebase_auth_provider");
   state.token = "";
   state.account = null;
   state.firebase.modules?.authModule?.signOut(state.firebase.auth).catch(() => {});
   renderRoute();
+}
+
+function accountDisplayName() {
+  const user = state.account?.user || {};
+  return String(user.display_name || user.email || t("account")).trim();
+}
+
+function accountInitials(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "T";
+  const first = parts[0]?.[0] || "";
+  const second = parts.length > 1 ? parts[1]?.[0] || "" : "";
+  return `${first}${second}`.toUpperCase();
+}
+
+function renderAuthHeader(loggedIn) {
+  el.logoutButton.classList.toggle("hidden", !loggedIn);
+  el.authButton.classList.toggle("logged-in", loggedIn);
+  el.authButton.onclick = loggedIn ? null : () => signIn("google").catch(showAuthError);
+  el.authButton.setAttribute("aria-label", loggedIn ? t("account") : t("login"));
+
+  if (!loggedIn) {
+    el.authName.textContent = t("login");
+    el.authAvatar.classList.add("hidden");
+    el.authAvatar.textContent = "";
+    el.authAvatar.style.backgroundImage = "";
+    return;
+  }
+
+  const user = state.account?.user || {};
+  const name = accountDisplayName();
+  el.authName.textContent = name;
+  el.authAvatar.classList.remove("hidden");
+  if (user.photo_url) {
+    el.authAvatar.textContent = "";
+    el.authAvatar.style.backgroundImage = `url("${String(user.photo_url).replaceAll('"', "%22")}")`;
+  } else {
+    el.authAvatar.style.backgroundImage = "";
+    el.authAvatar.textContent = accountInitials(name);
+  }
 }
 
 function isAdminRoute() {
@@ -258,8 +307,7 @@ function renderRoute() {
   const adminRoute = isAdminRoute();
   const loggedIn = Boolean(state.token && state.account);
 
-  el.authButton.textContent = loggedIn ? t("logout") : t("login");
-  el.authButton.onclick = loggedIn ? logout : () => signIn("google").catch(showAuthError);
+  renderAuthHeader(loggedIn);
 
   el.landing.classList.toggle("hidden", loggedIn);
   el.appShell.classList.toggle("hidden", !loggedIn || adminRoute);
@@ -301,6 +349,7 @@ function renderAccount() {
   const user = state.account?.user || {};
   el.accountEmail.textContent = user.email || user.display_name || t("account");
   el.userBalance.textContent = money(user.balance?.available_usd || 0);
+  renderAuthHeader(true);
   const status = state.account?.service_status || t("available");
   if (el.status) el.status.textContent = status === "Available" ? t("available") : status;
   const payments = state.account?.payments_config || state.config?.payments || {};
@@ -600,6 +649,7 @@ el.topupButton.addEventListener("click", quoteTopup);
 el.promptText.addEventListener("input", syncTokenEstimate);
 el.googleLogin.addEventListener("click", () => signIn("google").catch(showAuthError));
 el.appleLogin.addEventListener("click", () => signIn("apple").catch(showAuthError));
+el.logoutButton.addEventListener("click", logout);
 window.addEventListener("popstate", renderRoute);
 document.addEventListener("click", (event) => {
   const languageButton = event.target.closest(".global-language-button");

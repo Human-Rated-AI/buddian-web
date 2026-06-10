@@ -21,7 +21,13 @@
           <button class="global-language-button" type="button" data-lang="es" aria-pressed="false">ES</button>
           <button class="global-language-button" type="button" data-lang="ru" aria-pressed="false">RU</button>
         </div>
-        <button id="auth-button" class="auth-button" type="button" data-i18n="login">Log in</button>
+        <div id="auth-control" class="auth-control">
+          <button id="auth-button" class="auth-button" type="button">
+            <span id="auth-avatar" class="auth-avatar hidden" aria-hidden="true"></span>
+            <span id="auth-name">Log in</span>
+          </button>
+          <button id="logout-button" class="logout-button hidden" type="button" data-i18n="logout">Log out</button>
+        </div>
       </div>
     </header>
 

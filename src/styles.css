@@ -116,9 +116,60 @@ button:disabled {
   background: #98a2b3;
 }
 
+.auth-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
 .auth-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   width: auto;
   min-width: 86px;
+  max-width: min(34vw, 230px);
+}
+
+.auth-button.logged-in {
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: var(--ink);
+  cursor: default;
+}
+
+.auth-button.logged-in:hover {
+  background: #ffffff;
+}
+
+#auth-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  background-position: center;
+  background-size: cover;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 860;
+}
+
+.logout-button {
+  width: auto;
+  min-width: 76px;
 }
 
 .top-link,
@@ -763,6 +814,10 @@ textarea {
     flex-direction: column;
   }
 
+  .auth-control {
+    justify-content: flex-end;
+  }
+
   .top-link {
     font-size: 12px;
   }
@@ -780,6 +835,12 @@ textarea {
 @media (max-width: 420px) {
   .auth-button {
     min-width: 74px;
+    max-width: 170px;
+    padding-inline: 10px;
+  }
+
+  .logout-button {
+    min-width: 68px;
     padding-inline: 10px;
   }
 
