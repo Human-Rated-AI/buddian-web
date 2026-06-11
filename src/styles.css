@@ -570,6 +570,20 @@ textarea {
   margin-top: 0;
 }
 
+.payment-link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
+  gap: 8px;
+}
+
+.payment-link-grid .pay-link {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 10px;
+  background: #f7fbfa;
+  text-align: center;
+}
+
 .wallet-value {
   display: block;
   border: 1px solid var(--line);
@@ -762,8 +776,28 @@ textarea {
 }
 
 .admin-warning {
-  border-color: #f2b84b;
-  background: #fff8e7;
+  border: 2px solid #d92d20;
+  background: #fff1f0;
+  color: #7a271a;
+}
+
+.admin-warning h3 {
+  color: #b42318;
+  font-size: 24px;
+}
+
+.admin-warning p,
+.admin-warning strong {
+  color: #7a271a;
+}
+
+.admin-warning-total {
+  font-size: 20px;
+  font-weight: 820;
+}
+
+.admin-warning-total strong {
+  color: #b42318;
 }
 
 .admin-card.wide {

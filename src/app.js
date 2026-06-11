@@ -55,13 +55,14 @@ const el = {
   balanceCard: $("#balance-card"),
   balancePaymentPanel: $("#balance-payment-panel"),
   balanceTopupAmount: $("#balance-topup-amount"),
-  balanceContraLink: $("#balance-contra-link"),
+  balancePaypalLinks: $("#balance-paypal-links"),
   balanceCryptoCreate: $("#balance-crypto-create"),
   balanceCryptoCopy: $("#balance-crypto-copy"),
   balanceCryptoCheck: $("#balance-crypto-check"),
   balanceCryptoWallet: $("#balance-crypto-wallet"),
   balanceCryptoResult: $("#balance-crypto-result"),
   balanceTransactionsLink: $("#balance-transactions-link"),
+  balanceTransactionList: $("#balance-transaction-list"),
   balancePaymentEmpty: $("#balance-payment-empty"),
   search: $("#search"),
   provider: $("#provider"),
@@ -81,7 +82,6 @@ const el = {
   topupAmount: $("#topup-amount"),
   topupButton: $("#topup-button"),
   topupResult: $("#topup-result"),
-  contraLink: $("#contra-link"),
   installableList: $("#installable-list"),
   usageList: $("#usage-list"),
   transactionsSection: $("#transactions-section"),
@@ -563,21 +563,23 @@ function renderAccount() {
 }
 
 function renderPaymentLinks(payments) {
-  const contraUrl = String(payments.contra_topup_url || "").trim();
   const cryptoTopup = payments.crypto_topup || state.config?.payments?.crypto_topup || {};
   const cryptoWallet = String(cryptoTopup.wallet_address || payments.crypto_topup_wallet || "").trim();
+  const paypalLinks = Array.isArray(payments.paypal_topup_links) ? payments.paypal_topup_links : [];
   const rawWalletOnly = !cryptoTopup.enabled && cryptoWallet;
-  if (contraUrl) {
-    [el.contraLink, el.balanceContraLink].forEach((link) => {
-      link.href = contraUrl;
-      link.classList.remove("hidden");
-    });
+
+  if (paypalLinks.length) {
+    el.balancePaypalLinks.innerHTML = paypalLinks.map((link) => `
+      <a class="pay-link" href="${escapeHtml(link.url)}" target="_blank" rel="noopener">
+        ${escapeHtml(t("pay_paypal_amount").replace("{amount}", money(link.amount_usd)))}
+      </a>
+    `).join("");
+    el.balancePaypalLinks.classList.remove("hidden");
   } else {
-    [el.contraLink, el.balanceContraLink].forEach((link) => {
-      link.removeAttribute("href");
-      link.classList.add("hidden");
-    });
+    el.balancePaypalLinks.innerHTML = "";
+    el.balancePaypalLinks.classList.add("hidden");
   }
+
   el.balanceCryptoCreate.classList.toggle("hidden", !cryptoTopup.enabled);
   if (rawWalletOnly && !state.currentCryptoPayment) {
     el.balanceCryptoWallet.textContent = cryptoWallet;
@@ -587,7 +589,10 @@ function renderPaymentLinks(payments) {
     el.balanceCryptoWallet.classList.add("hidden");
     el.balanceCryptoCopy.classList.add("hidden");
   }
-  el.balancePaymentEmpty.classList.toggle("hidden", Boolean(contraUrl || cryptoTopup.enabled || rawWalletOnly));
+  el.balancePaymentEmpty.classList.toggle(
+    "hidden",
+    Boolean(paypalLinks.length || cryptoTopup.enabled || rawWalletOnly),
+  );
 }
 
 function toggleBalancePayments(event) {
@@ -699,14 +704,14 @@ function transactionTitle(item) {
   return item.source === "admin_manual" ? t("admin_credit") : item.source;
 }
 
-function renderTransactions() {
-  if (el.transactionList.classList.contains("hidden")) return;
+function renderTransactionList(target) {
+  if (!target || target.classList.contains("hidden")) return;
   const transactions = state.account?.transactions || [];
   if (!transactions.length) {
-    el.transactionList.innerHTML = `<div class="empty">${escapeHtml(t("no_transactions"))}</div>`;
+    target.innerHTML = `<div class="empty">${escapeHtml(t("no_transactions"))}</div>`;
     return;
   }
-  el.transactionList.innerHTML = transactions.slice(0, 50).map((item) => {
+  target.innerHTML = transactions.slice(0, 50).map((item) => {
     const prefix = Number(item.amount_usd) >= 0 ? "+" : "";
     const note = item.external_reference || item.metadata?.memo || item.metadata?.request_id || item.status || "";
     return `
@@ -718,10 +723,15 @@ function renderTransactions() {
   }).join("");
 }
 
+function renderTransactions() {
+  renderTransactionList(el.balanceTransactionList);
+  renderTransactionList(el.transactionList);
+}
+
 function showTransactions() {
-  el.transactionList.classList.remove("hidden");
+  el.balanceTransactionList.classList.remove("hidden");
   renderTransactions();
-  el.transactionsSection.scrollIntoView({ block: "start", behavior: "smooth" });
+  el.balanceTransactionList.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 function showAuthError(error) {

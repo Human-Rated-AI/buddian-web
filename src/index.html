@@ -173,13 +173,14 @@
               <span data-i18n="amount_usd">Amount USD</span>
               <input id="balance-topup-amount" type="number" min="10" step="1" value="10">
             </label>
-            <a id="balance-contra-link" class="pay-link hidden" href="#" target="_blank" rel="noopener" data-i18n="open_card_payment">Open card payment</a>
-            <button id="balance-crypto-create" class="secondary-button hidden" type="button" data-i18n="pay_with_crypto">Pay with Keplr</button>
+            <div id="balance-paypal-links" class="payment-link-grid hidden" aria-label="PayPal payment links"></div>
+            <button id="balance-crypto-create" class="secondary-button hidden" type="button" data-i18n="pay_with_crypto">Pay with ACT</button>
             <button id="balance-crypto-copy" class="secondary-button hidden" type="button" data-i18n="copy_crypto_payment">Copy payment details</button>
             <button id="balance-crypto-check" class="secondary-button hidden" type="button" data-i18n="check_crypto_payment">Check crypto payment</button>
             <code id="balance-crypto-wallet" class="wallet-value hidden"></code>
             <output id="balance-crypto-result" class="result hidden"></output>
             <button id="balance-transactions-link" class="secondary-button" type="button" data-i18n="show_transactions">Show transactions</button>
+            <div id="balance-transaction-list" class="compact-list hidden"></div>
             <p id="balance-payment-empty" class="empty" data-i18n="payment_links_unavailable">Payment links are being configured.</p>
           </div>
         </section>
@@ -277,7 +278,6 @@
             </label>
             <button id="topup-button" type="button" data-i18n="quote_topup">Quote top-up</button>
             <output id="topup-result" class="result"></output>
-            <a id="contra-link" class="pay-link hidden" href="#" target="_blank" rel="noopener" data-i18n="open_card_payment">Open card payment</a>
 
             <div class="section-head section-gap">
               <h2 data-i18n="installable_models">Installable Models</h2>
@@ -300,6 +300,6 @@
       <section id="extension-shell" class="hidden"></section>
     </main>
 
-    <script type="module" src="/app.js?v=20260611-transactions"></script>
+    <script type="module" src="/app.js?v=20260611-payments"></script>
   </body>
 </html>
