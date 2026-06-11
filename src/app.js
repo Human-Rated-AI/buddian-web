@@ -15,7 +15,7 @@ const apiBase = (() => {
   return `${window.location.protocol}//api.${host}`;
 })();
 const AUTH_LOG_KEY = "trust_auth_trace";
-const ADMIN_BUNDLE_VERSION = "20260611-admin-cache";
+const ADMIN_BUNDLE_VERSION = "20260611-admin-credit";
 
 const state = {
   config: null,
@@ -168,6 +168,21 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
+function readableErrorDetail(detail) {
+  if (!detail) return "";
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => item?.msg || item?.message || item?.detail || JSON.stringify(item))
+      .filter(Boolean)
+      .join("; ");
+  }
+  if (typeof detail === "object") {
+    return detail.message || detail.error || detail.detail || JSON.stringify(detail);
+  }
+  return String(detail);
+}
+
 function authTrace(context, details = {}, level = "info") {
   const entry = {
     at: new Date().toISOString(),
@@ -220,7 +235,7 @@ async function api(path, options = {}) {
     }
   }
   if (!response.ok) {
-    const error = new Error(body.detail?.message || body.detail || response.statusText);
+    const error = new Error(readableErrorDetail(body.detail) || response.statusText);
     error.status = response.status;
     error.path = path;
     error.body = body;
@@ -866,6 +881,7 @@ function modelQuery() {
 function renderModels() {
   const models = [...state.models].sort((a, b) => String(a.id).localeCompare(String(b.id)));
   el.modelCount.textContent = `${models.length}`;
+  renderModelSelect(models);
   if (!models.length) {
     el.modelList.innerHTML = `<div class="empty">${escapeHtml(t("no_matching_models"))}</div>`;
     return;
@@ -897,6 +913,20 @@ function renderModels() {
   }
 }
 
+function renderModelSelect(models) {
+  const selected = state.selectedModel || "";
+  const seen = new Set(models.map((model) => String(model.id)));
+  const options = [`<option value="">${escapeHtml(t("select_model_option"))}</option>`];
+  if (selected && !seen.has(selected)) {
+    options.push(`<option value="${escapeHtml(selected)}">${escapeHtml(selected)}</option>`);
+  }
+  options.push(
+    ...models.map((model) => `<option value="${escapeHtml(model.id)}">${escapeHtml(model.id)}</option>`),
+  );
+  el.quoteModel.innerHTML = options.join("");
+  el.quoteModel.value = selected;
+}
+
 async function loadModels() {
   if (!state.token) return;
   el.modelList.innerHTML = `<div class="empty">${escapeHtml(t("loading_models"))}</div>`;
@@ -907,9 +937,9 @@ async function loadModels() {
 }
 
 function selectModel(modelId) {
-  state.selectedModel = modelId;
-  el.quoteModel.value = modelId;
-  el.quoteResult.textContent = t("selected");
+  state.selectedModel = String(modelId || "");
+  el.quoteModel.value = state.selectedModel;
+  el.quoteResult.textContent = state.selectedModel ? t("selected") : t("select_model");
 }
 
 function syncTokenEstimate() {
@@ -1076,6 +1106,7 @@ for (const control of [el.search, el.provider, el.input, el.output]) {
 
 el.quoteButton.addEventListener("click", quoteRequest);
 el.runButton.addEventListener("click", runEncryptedInference);
+el.quoteModel.addEventListener("change", () => selectModel(el.quoteModel.value));
 el.topupButton?.addEventListener("click", quoteTopup);
 el.balanceCard.addEventListener("click", toggleBalancePayments);
 el.balanceZelleToggle.addEventListener("click", toggleZellePayment);

@@ -270,7 +270,9 @@
 
             <label>
               <span data-i18n="model">Model</span>
-              <input id="quote-model" type="text" readonly>
+              <select id="quote-model">
+                <option value="" data-i18n="select_model_option">Select a model...</option>
+              </select>
             </label>
 
             <label>
@@ -319,6 +321,6 @@
       <section id="extension-shell" class="hidden"></section>
     </main>
 
-    <script type="module" src="/app.js?v=20260611-customer-panel"></script>
+    <script type="module" src="/app.js?v=20260611-model-select"></script>
   </body>
 </html>

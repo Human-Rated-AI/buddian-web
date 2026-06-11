@@ -834,6 +834,17 @@ textarea {
   gap: 12px;
 }
 
+.admin-alert {
+  border: 1px solid #fecdca;
+  border-radius: 8px;
+  background: #fff1f0;
+  color: #7a271a;
+  margin-bottom: 12px;
+  padding: 12px;
+  font-weight: 720;
+  overflow-wrap: anywhere;
+}
+
 .admin-card {
   display: grid;
   gap: 10px;
