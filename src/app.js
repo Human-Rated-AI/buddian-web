@@ -61,6 +61,7 @@ const el = {
   balanceCryptoCheck: $("#balance-crypto-check"),
   balanceCryptoWallet: $("#balance-crypto-wallet"),
   balanceCryptoResult: $("#balance-crypto-result"),
+  balanceTransactionsLink: $("#balance-transactions-link"),
   balancePaymentEmpty: $("#balance-payment-empty"),
   search: $("#search"),
   provider: $("#provider"),
@@ -83,6 +84,8 @@ const el = {
   contraLink: $("#contra-link"),
   installableList: $("#installable-list"),
   usageList: $("#usage-list"),
+  transactionsSection: $("#transactions-section"),
+  transactionList: $("#transaction-list"),
 };
 
 function t(key) {
@@ -556,6 +559,7 @@ function renderAccount() {
   const payments = state.account?.payments_config || state.config?.payments || {};
   renderPaymentLinks(payments);
   renderUsage();
+  renderTransactions();
 }
 
 function renderPaymentLinks(payments) {
@@ -586,9 +590,16 @@ function renderPaymentLinks(payments) {
   el.balancePaymentEmpty.classList.toggle("hidden", Boolean(contraUrl || cryptoTopup.enabled || rawWalletOnly));
 }
 
-function toggleBalancePayments() {
-  const hidden = el.balancePaymentPanel.classList.toggle("hidden");
-  el.balanceCard.setAttribute("aria-expanded", hidden ? "false" : "true");
+function toggleBalancePayments(event) {
+  event?.preventDefault();
+  event?.stopPropagation();
+  const opening = el.balancePaymentPanel.classList.contains("hidden");
+  el.balancePaymentPanel.classList.toggle("hidden", !opening);
+  el.balanceCard.setAttribute("aria-expanded", opening ? "true" : "false");
+  console.info("[Trust UI] Balance panel toggled", { open: opening });
+  if (opening) {
+    el.balancePaymentPanel.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
 }
 
 async function copyCryptoWallet() {
@@ -681,6 +692,36 @@ function renderUsage() {
       `;
     })
     .join("");
+}
+
+function transactionTitle(item) {
+  if (item.kind === "usage") return item.model_id || item.source;
+  return item.source === "admin_manual" ? t("admin_credit") : item.source;
+}
+
+function renderTransactions() {
+  if (el.transactionList.classList.contains("hidden")) return;
+  const transactions = state.account?.transactions || [];
+  if (!transactions.length) {
+    el.transactionList.innerHTML = `<div class="empty">${escapeHtml(t("no_transactions"))}</div>`;
+    return;
+  }
+  el.transactionList.innerHTML = transactions.slice(0, 50).map((item) => {
+    const prefix = Number(item.amount_usd) >= 0 ? "+" : "";
+    const note = item.external_reference || item.metadata?.memo || item.metadata?.request_id || item.status || "";
+    return `
+      <div class="compact-item">
+        <strong>${prefix}${money(item.amount_usd)} · ${escapeHtml(transactionTitle(item))}</strong>
+        <span>${escapeHtml(item.status || "")} · ${escapeHtml(item.created_at || "")}${note ? ` · ${escapeHtml(note)}` : ""}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+function showTransactions() {
+  el.transactionList.classList.remove("hidden");
+  renderTransactions();
+  el.transactionsSection.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
 function showAuthError(error) {
@@ -963,12 +1004,18 @@ el.balanceCryptoCheck.addEventListener("click", () => checkCryptoTopup().catch((
   el.balanceCryptoResult.textContent = error.message;
   el.balanceCryptoResult.classList.remove("hidden");
 }));
+el.balanceTransactionsLink.addEventListener("click", showTransactions);
 el.promptText.addEventListener("input", syncTokenEstimate);
 el.googleLogin.addEventListener("click", () => signIn("google").catch(showAuthError));
 el.appleLogin.addEventListener("click", () => signIn("apple").catch(showAuthError));
 el.logoutButton.addEventListener("click", logout);
 window.addEventListener("popstate", renderRoute);
 document.addEventListener("click", (event) => {
+  const balanceButton = event.target.closest("#balance-card");
+  if (balanceButton) {
+    toggleBalancePayments(event);
+    return;
+  }
   const languageButton = event.target.closest(".global-language-button");
   if (languageButton) setLanguage(languageButton.dataset.lang || "en");
   if (!event.target.closest("#auth-control")) closeAuthMenu();
