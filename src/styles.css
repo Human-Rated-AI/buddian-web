@@ -584,6 +584,33 @@ textarea {
   text-align: center;
 }
 
+.zelle-payment {
+  display: grid;
+  gap: 8px;
+}
+
+.zelle-details {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fbfcfe;
+  padding: 10px;
+  text-align: center;
+}
+
+.zelle-qr {
+  width: min(100%, 360px);
+  height: auto;
+  border-radius: 6px;
+}
+
+.zelle-details p {
+  margin: 0;
+  color: var(--muted);
+}
+
 .wallet-value {
   display: block;
   border: 1px solid var(--line);

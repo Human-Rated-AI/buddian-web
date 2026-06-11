@@ -174,7 +174,15 @@
               <input id="balance-topup-amount" type="number" min="10" step="1" value="10">
             </label>
             <div id="balance-paypal-links" class="payment-link-grid hidden" aria-label="PayPal payment links"></div>
-            <button id="balance-crypto-create" class="secondary-button hidden" type="button" data-i18n="pay_with_crypto">Pay with ACT</button>
+            <section id="balance-zelle-payment" class="zelle-payment hidden" aria-label="Zelle payment" data-i18n-aria-label="zelle_payment">
+              <button id="balance-zelle-toggle" class="secondary-button" type="button" data-i18n="pay_with_zelle">Pay with Zelle</button>
+              <div id="balance-zelle-details" class="zelle-details hidden">
+                <img id="balance-zelle-qr" class="zelle-qr" alt="Zelle QR code" data-i18n-alt="zelle_qr_alt">
+                <strong id="balance-zelle-label"></strong>
+                <p data-i18n="zelle_manual_credit">Use your Trust account email in the Zelle memo. Balance is credited after confirmation.</p>
+              </div>
+            </section>
+            <button id="balance-crypto-create" class="secondary-button hidden" type="button" data-i18n="pay_with_crypto">Pay with crypto</button>
             <button id="balance-crypto-copy" class="secondary-button hidden" type="button" data-i18n="copy_crypto_payment">Copy payment details</button>
             <button id="balance-crypto-check" class="secondary-button hidden" type="button" data-i18n="check_crypto_payment">Check crypto payment</button>
             <code id="balance-crypto-wallet" class="wallet-value hidden"></code>
@@ -300,6 +308,6 @@
       <section id="extension-shell" class="hidden"></section>
     </main>
 
-    <script type="module" src="/app.js?v=20260611-payments"></script>
+    <script type="module" src="/app.js?v=20260611-zelle"></script>
   </body>
 </html>

@@ -56,6 +56,11 @@ const el = {
   balancePaymentPanel: $("#balance-payment-panel"),
   balanceTopupAmount: $("#balance-topup-amount"),
   balancePaypalLinks: $("#balance-paypal-links"),
+  balanceZellePayment: $("#balance-zelle-payment"),
+  balanceZelleToggle: $("#balance-zelle-toggle"),
+  balanceZelleDetails: $("#balance-zelle-details"),
+  balanceZelleQr: $("#balance-zelle-qr"),
+  balanceZelleLabel: $("#balance-zelle-label"),
   balanceCryptoCreate: $("#balance-crypto-create"),
   balanceCryptoCopy: $("#balance-crypto-copy"),
   balanceCryptoCheck: $("#balance-crypto-check"),
@@ -566,6 +571,7 @@ function renderPaymentLinks(payments) {
   const cryptoTopup = payments.crypto_topup || state.config?.payments?.crypto_topup || {};
   const cryptoWallet = String(cryptoTopup.wallet_address || payments.crypto_topup_wallet || "").trim();
   const paypalLinks = Array.isArray(payments.paypal_topup_links) ? payments.paypal_topup_links : [];
+  const zelle = payments.zelle_payment || {};
   const rawWalletOnly = !cryptoTopup.enabled && cryptoWallet;
 
   if (paypalLinks.length) {
@@ -580,6 +586,17 @@ function renderPaymentLinks(payments) {
     el.balancePaypalLinks.classList.add("hidden");
   }
 
+  if (zelle.enabled && zelle.qr_url) {
+    el.balanceZelleQr.src = zelle.qr_url;
+    el.balanceZelleLabel.textContent = zelle.label || "Zelle";
+    el.balanceZellePayment.classList.remove("hidden");
+  } else {
+    el.balanceZelleQr.removeAttribute("src");
+    el.balanceZelleLabel.textContent = "";
+    el.balanceZelleDetails.classList.add("hidden");
+    el.balanceZellePayment.classList.add("hidden");
+  }
+
   el.balanceCryptoCreate.classList.toggle("hidden", !cryptoTopup.enabled);
   if (rawWalletOnly && !state.currentCryptoPayment) {
     el.balanceCryptoWallet.textContent = cryptoWallet;
@@ -591,7 +608,7 @@ function renderPaymentLinks(payments) {
   }
   el.balancePaymentEmpty.classList.toggle(
     "hidden",
-    Boolean(paypalLinks.length || cryptoTopup.enabled || rawWalletOnly),
+    Boolean(paypalLinks.length || zelle.enabled || cryptoTopup.enabled || rawWalletOnly),
   );
 }
 
@@ -604,6 +621,15 @@ function toggleBalancePayments(event) {
   console.info("[Trust UI] Balance panel toggled", { open: opening });
   if (opening) {
     el.balancePaymentPanel.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+}
+
+function toggleZellePayment(event) {
+  event?.preventDefault();
+  const opening = el.balanceZelleDetails.classList.contains("hidden");
+  el.balanceZelleDetails.classList.toggle("hidden", !opening);
+  if (opening) {
+    el.balanceZelleDetails.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 }
 
@@ -1000,6 +1026,7 @@ el.quoteButton.addEventListener("click", quoteRequest);
 el.runButton.addEventListener("click", runEncryptedInference);
 el.topupButton.addEventListener("click", quoteTopup);
 el.balanceCard.addEventListener("click", toggleBalancePayments);
+el.balanceZelleToggle.addEventListener("click", toggleZellePayment);
 el.balanceTopupAmount.addEventListener("input", () => syncTopupAmount(el.balanceTopupAmount));
 el.topupAmount.addEventListener("input", () => syncTopupAmount(el.topupAmount));
 el.balanceCryptoCreate.addEventListener("click", () => createCryptoTopup().catch((error) => {
