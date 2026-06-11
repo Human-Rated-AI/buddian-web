@@ -22,6 +22,7 @@ const state = {
   account: null,
   models: [],
   selectedModel: "",
+  currentCryptoPayment: null,
   language: normalizeLanguage(localStorage.getItem("trust_language") || browserLanguage()),
   firebase: {
     modules: null,
@@ -53,9 +54,13 @@ const el = {
   userBalance: $("#user-balance"),
   balanceCard: $("#balance-card"),
   balancePaymentPanel: $("#balance-payment-panel"),
+  balanceTopupAmount: $("#balance-topup-amount"),
   balanceContraLink: $("#balance-contra-link"),
+  balanceCryptoCreate: $("#balance-crypto-create"),
   balanceCryptoCopy: $("#balance-crypto-copy"),
+  balanceCryptoCheck: $("#balance-crypto-check"),
   balanceCryptoWallet: $("#balance-crypto-wallet"),
+  balanceCryptoResult: $("#balance-crypto-result"),
   balancePaymentEmpty: $("#balance-payment-empty"),
   search: $("#search"),
   provider: $("#provider"),
@@ -431,6 +436,7 @@ function logout() {
   localStorage.removeItem("trust_firebase_auth_provider");
   state.token = "";
   state.account = null;
+  state.currentCryptoPayment = null;
   el.balancePaymentPanel.classList.add("hidden");
   el.balanceCard.setAttribute("aria-expanded", "false");
   state.firebase.modules?.authModule?.signOut(state.firebase.auth).catch(() => {});
@@ -554,7 +560,9 @@ function renderAccount() {
 
 function renderPaymentLinks(payments) {
   const contraUrl = String(payments.contra_topup_url || "").trim();
-  const cryptoWallet = String(payments.crypto_topup_wallet || "").trim();
+  const cryptoTopup = payments.crypto_topup || state.config?.payments?.crypto_topup || {};
+  const cryptoWallet = String(cryptoTopup.wallet_address || payments.crypto_topup_wallet || "").trim();
+  const rawWalletOnly = !cryptoTopup.enabled && cryptoWallet;
   if (contraUrl) {
     [el.contraLink, el.balanceContraLink].forEach((link) => {
       link.href = contraUrl;
@@ -566,10 +574,16 @@ function renderPaymentLinks(payments) {
       link.classList.add("hidden");
     });
   }
-  el.balanceCryptoWallet.textContent = cryptoWallet;
-  el.balanceCryptoWallet.classList.toggle("hidden", !cryptoWallet);
-  el.balanceCryptoCopy.classList.toggle("hidden", !cryptoWallet);
-  el.balancePaymentEmpty.classList.toggle("hidden", Boolean(contraUrl || cryptoWallet));
+  el.balanceCryptoCreate.classList.toggle("hidden", !cryptoTopup.enabled);
+  if (rawWalletOnly && !state.currentCryptoPayment) {
+    el.balanceCryptoWallet.textContent = cryptoWallet;
+    el.balanceCryptoWallet.classList.remove("hidden");
+    el.balanceCryptoCopy.classList.remove("hidden");
+  } else if (!state.currentCryptoPayment) {
+    el.balanceCryptoWallet.classList.add("hidden");
+    el.balanceCryptoCopy.classList.add("hidden");
+  }
+  el.balancePaymentEmpty.classList.toggle("hidden", Boolean(contraUrl || cryptoTopup.enabled || rawWalletOnly));
 }
 
 function toggleBalancePayments() {
@@ -578,10 +592,75 @@ function toggleBalancePayments() {
 }
 
 async function copyCryptoWallet() {
-  const wallet = el.balanceCryptoWallet.textContent.trim();
-  if (!wallet) return;
-  await navigator.clipboard.writeText(wallet);
-  el.topupResult.textContent = t("copied");
+  const details = el.balanceCryptoWallet.textContent.trim();
+  if (!details) return;
+  await navigator.clipboard.writeText(details);
+  el.balanceCryptoResult.textContent = t("copied");
+  el.balanceCryptoResult.classList.remove("hidden");
+}
+
+function syncTopupAmount(source) {
+  const value = source.value || "10";
+  el.topupAmount.value = value;
+  el.balanceTopupAmount.value = value;
+}
+
+function renderCryptoPaymentIntent(intent, matched = false) {
+  state.currentCryptoPayment = intent;
+  const details = [
+    `${t("send_exactly")}: ${intent.display_amount}`,
+    `${t("wallet")}: ${intent.wallet_address}`,
+    `${t("memo")}: ${intent.memo}`,
+    `${t("chain")}: ${intent.chain_id}`,
+  ].join("\n");
+  el.balanceCryptoWallet.textContent = details;
+  el.balanceCryptoWallet.classList.remove("hidden");
+  el.balanceCryptoCopy.classList.remove("hidden");
+  el.balanceCryptoCheck.classList.remove("hidden");
+  el.balanceCryptoResult.textContent = matched
+    ? `${t("crypto_payment_matched")}: ${money(intent.amount_usd)}`
+    : t("crypto_payment_created");
+  el.balanceCryptoResult.classList.remove("hidden");
+}
+
+async function createCryptoTopup() {
+  el.balanceCryptoCreate.disabled = true;
+  try {
+    const intent = await api("/billing/crypto/topup-intent", {
+      method: "POST",
+      body: { amount_usd: String(Number(el.balanceTopupAmount.value || el.topupAmount.value || 0)) },
+    });
+    renderCryptoPaymentIntent(intent);
+  } catch (error) {
+    el.balanceCryptoResult.textContent = error.message;
+    el.balanceCryptoResult.classList.remove("hidden");
+  } finally {
+    el.balanceCryptoCreate.disabled = false;
+  }
+}
+
+async function checkCryptoTopup() {
+  if (!state.currentCryptoPayment?.payment_id) return;
+  el.balanceCryptoCheck.disabled = true;
+  try {
+    const result = await api("/billing/crypto/topup-check", {
+      method: "POST",
+      body: { payment_id: state.currentCryptoPayment.payment_id },
+    });
+    renderCryptoPaymentIntent(result, result.status === "completed");
+    if (result.status === "completed") {
+      await refreshAccount();
+      renderAccount();
+    } else {
+      el.balanceCryptoResult.textContent = t("crypto_payment_pending");
+      el.balanceCryptoResult.classList.remove("hidden");
+    }
+  } catch (error) {
+    el.balanceCryptoResult.textContent = error.message;
+    el.balanceCryptoResult.classList.remove("hidden");
+  } finally {
+    el.balanceCryptoCheck.disabled = false;
+  }
 }
 
 function renderUsage() {
@@ -870,8 +949,19 @@ el.quoteButton.addEventListener("click", quoteRequest);
 el.runButton.addEventListener("click", runEncryptedInference);
 el.topupButton.addEventListener("click", quoteTopup);
 el.balanceCard.addEventListener("click", toggleBalancePayments);
+el.balanceTopupAmount.addEventListener("input", () => syncTopupAmount(el.balanceTopupAmount));
+el.topupAmount.addEventListener("input", () => syncTopupAmount(el.topupAmount));
+el.balanceCryptoCreate.addEventListener("click", () => createCryptoTopup().catch((error) => {
+  el.balanceCryptoResult.textContent = error.message;
+  el.balanceCryptoResult.classList.remove("hidden");
+}));
 el.balanceCryptoCopy.addEventListener("click", () => copyCryptoWallet().catch((error) => {
-  el.topupResult.textContent = error.message;
+  el.balanceCryptoResult.textContent = error.message;
+  el.balanceCryptoResult.classList.remove("hidden");
+}));
+el.balanceCryptoCheck.addEventListener("click", () => checkCryptoTopup().catch((error) => {
+  el.balanceCryptoResult.textContent = error.message;
+  el.balanceCryptoResult.classList.remove("hidden");
 }));
 el.promptText.addEventListener("input", syncTokenEstimate);
 el.googleLogin.addEventListener("click", () => signIn("google").catch(showAuthError));

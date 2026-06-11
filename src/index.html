@@ -169,9 +169,16 @@
             <h2 data-i18n="top_up">Top Up</h2>
           </div>
           <div class="payment-actions">
+            <label>
+              <span data-i18n="amount_usd">Amount USD</span>
+              <input id="balance-topup-amount" type="number" min="10" step="1" value="10">
+            </label>
             <a id="balance-contra-link" class="pay-link hidden" href="#" target="_blank" rel="noopener" data-i18n="open_card_payment">Open card payment</a>
-            <button id="balance-crypto-copy" class="secondary-button hidden" type="button" data-i18n="copy_crypto_wallet">Copy crypto wallet</button>
+            <button id="balance-crypto-create" class="secondary-button hidden" type="button" data-i18n="pay_with_crypto">Pay with Keplr</button>
+            <button id="balance-crypto-copy" class="secondary-button hidden" type="button" data-i18n="copy_crypto_payment">Copy payment details</button>
+            <button id="balance-crypto-check" class="secondary-button hidden" type="button" data-i18n="check_crypto_payment">Check crypto payment</button>
             <code id="balance-crypto-wallet" class="wallet-value hidden"></code>
+            <output id="balance-crypto-result" class="result hidden"></output>
             <p id="balance-payment-empty" class="empty" data-i18n="payment_links_unavailable">Payment links are being configured.</p>
           </div>
         </section>
