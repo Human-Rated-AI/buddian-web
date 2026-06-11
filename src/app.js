@@ -62,6 +62,7 @@ const el = {
   balanceZelleQr: $("#balance-zelle-qr"),
   balanceZelleLabel: $("#balance-zelle-label"),
   balanceCryptoCreate: $("#balance-crypto-create"),
+  balanceCryptoCheckout: $("#balance-crypto-checkout"),
   balanceCryptoCopy: $("#balance-crypto-copy"),
   balanceCryptoCheck: $("#balance-crypto-check"),
   balanceCryptoWallet: $("#balance-crypto-wallet"),
@@ -605,6 +606,8 @@ function renderPaymentLinks(payments) {
   } else if (!state.currentCryptoPayment) {
     el.balanceCryptoWallet.classList.add("hidden");
     el.balanceCryptoCopy.classList.add("hidden");
+    el.balanceCryptoCheckout.classList.add("hidden");
+    el.balanceCryptoCheckout.removeAttribute("href");
   }
   el.balancePaymentEmpty.classList.toggle(
     "hidden",
@@ -649,6 +652,18 @@ function syncTopupAmount(source) {
 
 function renderCryptoPaymentIntent(intent, matched = false) {
   state.currentCryptoPayment = intent;
+  if (intent.checkout_url) {
+    el.balanceCryptoCheckout.href = intent.checkout_url;
+    el.balanceCryptoCheckout.classList.remove("hidden");
+    el.balanceCryptoWallet.classList.add("hidden");
+    el.balanceCryptoCopy.classList.add("hidden");
+    el.balanceCryptoCheck.classList.remove("hidden");
+    el.balanceCryptoResult.textContent = matched
+      ? `${t("crypto_payment_matched")}: ${money(intent.amount_usd)}`
+      : t("crypto_checkout_created");
+    el.balanceCryptoResult.classList.remove("hidden");
+    return;
+  }
   const details = [
     `${t("send_exactly")}: ${intent.display_amount}`,
     `${t("wallet")}: ${intent.wallet_address}`,
@@ -657,6 +672,8 @@ function renderCryptoPaymentIntent(intent, matched = false) {
   ].join("\n");
   el.balanceCryptoWallet.textContent = details;
   el.balanceCryptoWallet.classList.remove("hidden");
+  el.balanceCryptoCheckout.classList.add("hidden");
+  el.balanceCryptoCheckout.removeAttribute("href");
   el.balanceCryptoCopy.classList.remove("hidden");
   el.balanceCryptoCheck.classList.remove("hidden");
   el.balanceCryptoResult.textContent = matched
