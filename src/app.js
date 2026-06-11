@@ -140,6 +140,16 @@ function compactNumber(value) {
   }).format(Number(value));
 }
 
+function formatDateTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat(state.language === "en" ? "en-US" : state.language, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -540,7 +550,7 @@ function renderRoute() {
         root: el.extensionShell,
         api,
         state,
-        helpers: { $, escapeHtml, money, t, applyTranslations },
+        helpers: { $, escapeHtml, money, formatDateTime, t, applyTranslations },
       });
     } else {
       el.extensionShell.innerHTML = `<div class="empty">${escapeHtml(t("checking"))}</div>`;
@@ -735,7 +745,7 @@ function renderUsage() {
       return `
         <div class="compact-item">
           <strong>${escapeHtml(item.model_id || item.action)}</strong>
-          <span>${money(item.user_charge_usd)} · ${escapeHtml(status)} · ${escapeHtml(item.created_at || "")}</span>
+          <span>${money(item.user_charge_usd)} · ${escapeHtml(status)} · ${escapeHtml(formatDateTime(item.created_at))}</span>
         </div>
       `;
     })
@@ -760,7 +770,7 @@ function renderTransactionList(target) {
     return `
       <div class="compact-item">
         <strong>${prefix}${money(item.amount_usd)} · ${escapeHtml(transactionTitle(item))}</strong>
-        <span>${escapeHtml(item.status || "")} · ${escapeHtml(item.created_at || "")}${note ? ` · ${escapeHtml(note)}` : ""}</span>
+        <span>${escapeHtml(item.status || "")} · ${escapeHtml(formatDateTime(item.created_at))}${note ? ` · ${escapeHtml(note)}` : ""}</span>
       </div>
     `;
   }).join("");
@@ -1081,7 +1091,7 @@ document.addEventListener("keydown", (event) => {
 window.TrustApp = {
   api,
   state,
-  helpers: { $, $$, escapeHtml, money, t, applyTranslations },
+  helpers: { $, $$, escapeHtml, money, formatDateTime, t, applyTranslations },
 };
 
 (async function main() {
