@@ -51,6 +51,12 @@ const el = {
   status: $("#service-status"),
   accountEmail: $("#account-email"),
   userBalance: $("#user-balance"),
+  balanceCard: $("#balance-card"),
+  balancePaymentPanel: $("#balance-payment-panel"),
+  balanceContraLink: $("#balance-contra-link"),
+  balanceCryptoCopy: $("#balance-crypto-copy"),
+  balanceCryptoWallet: $("#balance-crypto-wallet"),
+  balancePaymentEmpty: $("#balance-payment-empty"),
   search: $("#search"),
   provider: $("#provider"),
   input: $("#input-modality"),
@@ -425,6 +431,8 @@ function logout() {
   localStorage.removeItem("trust_firebase_auth_provider");
   state.token = "";
   state.account = null;
+  el.balancePaymentPanel.classList.add("hidden");
+  el.balanceCard.setAttribute("aria-expanded", "false");
   state.firebase.modules?.authModule?.signOut(state.firebase.auth).catch(() => {});
   renderRoute();
 }
@@ -540,13 +548,40 @@ function renderAccount() {
   const status = state.account?.service_status || t("available");
   if (el.status) el.status.textContent = status === "Available" ? t("available") : status;
   const payments = state.account?.payments_config || state.config?.payments || {};
-  if (payments.contra_topup_url) {
-    el.contraLink.href = payments.contra_topup_url;
-    el.contraLink.classList.remove("hidden");
-  } else {
-    el.contraLink.classList.add("hidden");
-  }
+  renderPaymentLinks(payments);
   renderUsage();
+}
+
+function renderPaymentLinks(payments) {
+  const contraUrl = String(payments.contra_topup_url || "").trim();
+  const cryptoWallet = String(payments.crypto_topup_wallet || "").trim();
+  if (contraUrl) {
+    [el.contraLink, el.balanceContraLink].forEach((link) => {
+      link.href = contraUrl;
+      link.classList.remove("hidden");
+    });
+  } else {
+    [el.contraLink, el.balanceContraLink].forEach((link) => {
+      link.removeAttribute("href");
+      link.classList.add("hidden");
+    });
+  }
+  el.balanceCryptoWallet.textContent = cryptoWallet;
+  el.balanceCryptoWallet.classList.toggle("hidden", !cryptoWallet);
+  el.balanceCryptoCopy.classList.toggle("hidden", !cryptoWallet);
+  el.balancePaymentEmpty.classList.toggle("hidden", Boolean(contraUrl || cryptoWallet));
+}
+
+function toggleBalancePayments() {
+  const hidden = el.balancePaymentPanel.classList.toggle("hidden");
+  el.balanceCard.setAttribute("aria-expanded", hidden ? "false" : "true");
+}
+
+async function copyCryptoWallet() {
+  const wallet = el.balanceCryptoWallet.textContent.trim();
+  if (!wallet) return;
+  await navigator.clipboard.writeText(wallet);
+  el.topupResult.textContent = t("copied");
 }
 
 function renderUsage() {
@@ -834,6 +869,10 @@ for (const control of [el.search, el.provider, el.input, el.output]) {
 el.quoteButton.addEventListener("click", quoteRequest);
 el.runButton.addEventListener("click", runEncryptedInference);
 el.topupButton.addEventListener("click", quoteTopup);
+el.balanceCard.addEventListener("click", toggleBalancePayments);
+el.balanceCryptoCopy.addEventListener("click", () => copyCryptoWallet().catch((error) => {
+  el.topupResult.textContent = error.message;
+}));
 el.promptText.addEventListener("input", syncTokenEstimate);
 el.googleLogin.addEventListener("click", () => signIn("google").catch(showAuthError));
 el.appleLogin.addEventListener("click", () => signIn("apple").catch(showAuthError));

@@ -519,12 +519,23 @@ textarea {
   margin-bottom: 12px;
 }
 
-.account-strip > div {
+.account-strip > div,
+.account-strip > button {
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
   padding: 12px;
+}
+
+.balance-card {
+  color: var(--ink);
+  text-align: left;
+}
+
+.balance-card:hover {
+  border-color: var(--accent);
+  background: #f7fbfa;
 }
 
 .account-strip span {
@@ -539,6 +550,35 @@ textarea {
   display: block;
   margin-top: 4px;
   overflow-wrap: anywhere;
+}
+
+.balance-payment-panel {
+  margin: 0 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.payment-actions {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.payment-actions .pay-link,
+.payment-actions button {
+  margin-top: 0;
+}
+
+.wallet-value {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fbfcfe;
+  padding: 10px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .toolbar {
@@ -721,8 +761,22 @@ textarea {
   padding: 14px;
 }
 
+.admin-warning {
+  border-color: #f2b84b;
+  background: #fff8e7;
+}
+
 .admin-card.wide {
   min-width: 0;
+}
+
+.admin-user-row {
+  gap: 10px;
+}
+
+.admin-credit-form {
+  display: grid;
+  gap: 8px;
 }
 
 @media (min-width: 700px) {
@@ -780,6 +834,15 @@ textarea {
 
   .admin-card.wide {
     grid-column: 1 / -1;
+  }
+
+  .admin-user-row {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
+    align-items: center;
+  }
+
+  .admin-credit-form {
+    grid-template-columns: 100px minmax(0, 1fr) 120px;
   }
 }
 

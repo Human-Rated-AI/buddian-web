@@ -150,10 +150,10 @@
 
       <section id="app-shell" class="hidden">
         <section class="account-strip">
-          <div>
+          <button id="balance-card" class="balance-card" type="button" aria-expanded="false" aria-controls="balance-payment-panel" data-i18n-aria-label="open_topup_options">
             <span data-i18n="balance">Balance</span>
             <strong id="user-balance">$0.00</strong>
-          </div>
+          </button>
           <div>
             <span data-i18n="status">Status</span>
             <strong id="service-status" data-i18n="checking">Checking</strong>
@@ -161,6 +161,18 @@
           <div>
             <span data-i18n="account">Account</span>
             <strong id="account-email" data-i18n="signed_in">Signed in</strong>
+          </div>
+        </section>
+
+        <section id="balance-payment-panel" class="balance-payment-panel hidden" aria-label="Payment options" data-i18n-aria-label="payment_options">
+          <div class="section-head">
+            <h2 data-i18n="top_up">Top Up</h2>
+          </div>
+          <div class="payment-actions">
+            <a id="balance-contra-link" class="pay-link hidden" href="#" target="_blank" rel="noopener" data-i18n="open_card_payment">Open card payment</a>
+            <button id="balance-crypto-copy" class="secondary-button hidden" type="button" data-i18n="copy_crypto_wallet">Copy crypto wallet</button>
+            <code id="balance-crypto-wallet" class="wallet-value hidden"></code>
+            <p id="balance-payment-empty" class="empty" data-i18n="payment_links_unavailable">Payment links are being configured.</p>
           </div>
         </section>
 
