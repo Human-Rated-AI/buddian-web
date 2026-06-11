@@ -150,7 +150,7 @@
 
       <section id="app-shell" class="hidden">
         <section class="account-strip">
-          <button id="balance-card" class="balance-card" type="button" aria-expanded="false" aria-controls="balance-payment-panel" data-i18n-aria-label="open_topup_options">
+          <button id="balance-card" class="balance-card" type="button" aria-expanded="true" aria-controls="balance-payment-panel" data-i18n-aria-label="open_topup_options">
             <span data-i18n="balance">Balance</span>
             <strong id="user-balance">$0.00</strong>
           </button>
@@ -164,21 +164,20 @@
           </div>
         </section>
 
-        <section id="balance-payment-panel" class="balance-payment-panel hidden" aria-label="Payment options" data-i18n-aria-label="payment_options">
+        <section id="balance-payment-panel" class="balance-payment-panel" aria-label="Payment options" data-i18n-aria-label="payment_options">
           <div class="section-head">
             <h2 data-i18n="top_up">Top Up</h2>
+            <span id="payment-minimum" class="count"></span>
           </div>
           <div class="payment-actions">
-            <label>
-              <span data-i18n="amount_usd">Amount USD</span>
-              <input id="balance-topup-amount" type="number" min="10" step="1" value="10">
-            </label>
+            <input id="balance-topup-amount" type="hidden" value="10">
+            <input id="topup-amount" type="hidden" value="10">
             <div id="balance-paypal-links" class="payment-link-grid hidden" aria-label="PayPal payment links"></div>
             <section id="balance-zelle-payment" class="zelle-payment hidden" aria-label="Zelle payment" data-i18n-aria-label="zelle_payment">
               <button id="balance-zelle-toggle" class="secondary-button" type="button" data-i18n="pay_with_zelle">Pay with Zelle</button>
               <div id="balance-zelle-details" class="zelle-details hidden">
                 <img id="balance-zelle-qr" class="zelle-qr" alt="Zelle QR code" data-i18n-alt="zelle_qr_alt">
-                <strong id="balance-zelle-label"></strong>
+                <p><span data-i18n="zelle_recipient">Recipient</span>: <code id="balance-zelle-recipient"></code></p>
                 <p data-i18n="zelle_manual_credit">Use your Trust account email in the Zelle memo. Balance is credited after confirmation.</p>
               </div>
             </section>
@@ -192,6 +191,21 @@
             <div id="balance-transaction-list" class="compact-list hidden"></div>
             <p id="balance-payment-empty" class="empty" data-i18n="payment_links_unavailable">Payment links are being configured.</p>
           </div>
+        </section>
+
+        <section class="workflow-strip" aria-label="Customer workflow">
+          <article>
+            <strong data-i18n="workflow_pay_title">Add funds</strong>
+            <span data-i18n="workflow_pay_text">Use PayPal presets, Zelle, or crypto. Minimum $10.</span>
+          </article>
+          <article>
+            <strong data-i18n="workflow_use_title">Use pre-installed</strong>
+            <span data-i18n="workflow_use_text">Pick a secure model, enter a prompt, quote, then run.</span>
+          </article>
+          <article>
+            <strong data-i18n="workflow_install_title">Install new models</strong>
+            <span data-i18n="workflow_install_text">Review installable sources below and manage added models.</span>
+          </article>
         </section>
 
         <section class="toolbar" aria-label="Model filters">
@@ -240,7 +254,10 @@
         <section class="workbench">
           <div class="models-panel">
             <div class="section-head">
-              <h2 data-i18n="preinstalled_models">Pre-installed Models</h2>
+              <div>
+                <h2 data-i18n="preinstalled_models">Pre-installed Models</h2>
+                <p class="section-subtitle" data-i18n="preinstalled_models_help">Start here: choose a secure model, then run it in Private Inference.</p>
+              </div>
               <span id="model-count" class="count">0</span>
             </div>
             <div id="model-list" class="model-list" aria-live="polite"></div>
@@ -279,17 +296,10 @@
             <output id="inference-result" class="result inference-result" data-i18n="response_waiting">Encrypted response will be decrypted here.</output>
 
             <div class="section-head section-gap">
-              <h2 data-i18n="top_up">Top Up</h2>
-            </div>
-            <label>
-              <span data-i18n="amount_usd">Amount USD</span>
-              <input id="topup-amount" type="number" min="10" step="1" value="10">
-            </label>
-            <button id="topup-button" type="button" data-i18n="quote_topup">Quote top-up</button>
-            <output id="topup-result" class="result"></output>
-
-            <div class="section-head section-gap">
-              <h2 data-i18n="installable_models">Installable Models</h2>
+              <div>
+                <h2 data-i18n="installable_models">Installable Models</h2>
+                <p class="section-subtitle" data-i18n="installable_models_help">Use this list for new Hugging Face, Nvidia, and open-weight models as installation support is enabled.</p>
+              </div>
             </div>
             <div id="installable-list" class="compact-list"></div>
 
@@ -309,6 +319,6 @@
       <section id="extension-shell" class="hidden"></section>
     </main>
 
-    <script type="module" src="/app.js?v=20260611-admin-payments"></script>
+    <script type="module" src="/app.js?v=20260611-customer-panel"></script>
   </body>
 </html>

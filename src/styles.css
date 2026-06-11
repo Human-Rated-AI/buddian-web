@@ -514,7 +514,7 @@ textarea {
 
 .account-strip {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -611,6 +611,11 @@ textarea {
   color: var(--muted);
 }
 
+.zelle-details code {
+  color: var(--ink);
+  font-weight: 760;
+}
+
 .wallet-value {
   display: block;
   border: 1px solid var(--line);
@@ -633,6 +638,30 @@ textarea {
   gap: 12px;
 }
 
+.workflow-strip {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.workflow-strip article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px;
+}
+
+.workflow-strip strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.workflow-strip span,
+.section-subtitle {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .models-panel {
   overflow: hidden;
 }
@@ -650,6 +679,15 @@ textarea {
   min-height: 44px;
   padding: 0 14px;
   border-bottom: 1px solid var(--line);
+}
+
+.section-head h2,
+.section-head p {
+  margin: 0;
+}
+
+.section-head > div {
+  min-width: 0;
 }
 
 .side-panel .section-head,
@@ -887,6 +925,28 @@ textarea {
 
   .toolbar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .account-strip {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .payment-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, 0.55fr);
+    align-items: start;
+  }
+
+  .payment-actions .payment-link-grid,
+  .payment-actions .zelle-payment,
+  .payment-actions .wallet-value,
+  .payment-actions .result,
+  .payment-actions .compact-list,
+  .payment-actions .empty {
+    grid-column: 1 / -1;
+  }
+
+  .workflow-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .how-section {

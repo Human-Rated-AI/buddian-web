@@ -15,6 +15,7 @@ const apiBase = (() => {
   return `${window.location.protocol}//api.${host}`;
 })();
 const AUTH_LOG_KEY = "trust_auth_trace";
+const ADMIN_BUNDLE_VERSION = "20260611-admin-cache";
 
 const state = {
   config: null,
@@ -55,12 +56,13 @@ const el = {
   balanceCard: $("#balance-card"),
   balancePaymentPanel: $("#balance-payment-panel"),
   balanceTopupAmount: $("#balance-topup-amount"),
+  paymentMinimum: $("#payment-minimum"),
   balancePaypalLinks: $("#balance-paypal-links"),
   balanceZellePayment: $("#balance-zelle-payment"),
   balanceZelleToggle: $("#balance-zelle-toggle"),
   balanceZelleDetails: $("#balance-zelle-details"),
   balanceZelleQr: $("#balance-zelle-qr"),
-  balanceZelleLabel: $("#balance-zelle-label"),
+  balanceZelleRecipient: $("#balance-zelle-recipient"),
   balanceCryptoCreate: $("#balance-crypto-create"),
   balanceCryptoCheckout: $("#balance-crypto-checkout"),
   balanceCryptoCopy: $("#balance-crypto-copy"),
@@ -131,6 +133,14 @@ function money(value) {
     currency: "USD",
     maximumFractionDigits: numberValue < 1 ? 6 : 2,
   }).format(numberValue);
+}
+
+function wholeMoney(value) {
+  return new Intl.NumberFormat(state.language === "en" ? "en-US" : state.language, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
 }
 
 function compactNumber(value) {
@@ -554,7 +564,7 @@ function renderRoute() {
       });
     } else {
       el.extensionShell.innerHTML = `<div class="empty">${escapeHtml(t("checking"))}</div>`;
-      import("/admin.js")
+      import(`/admin.js?v=${ADMIN_BUNDLE_VERSION}`)
         .then(() => {
           if (isAdminRoute()) renderRoute();
         })
@@ -584,6 +594,11 @@ function renderPaymentLinks(payments) {
   const paypalLinks = Array.isArray(payments.paypal_topup_links) ? payments.paypal_topup_links : [];
   const zelle = payments.zelle_payment || {};
   const rawWalletOnly = !cryptoTopup.enabled && cryptoWallet;
+  const minimumTopup = payments.minimum_topup_usd || state.config?.payments?.minimum_topup_usd || "10.00";
+  const minimumText = t("minimum_payment").replace("{amount}", wholeMoney(minimumTopup));
+  if (el.paymentMinimum) el.paymentMinimum.textContent = minimumText;
+  if (el.balanceTopupAmount) el.balanceTopupAmount.value = String(Number(minimumTopup || 10));
+  if (el.topupAmount) el.topupAmount.value = String(Number(minimumTopup || 10));
 
   if (paypalLinks.length) {
     el.balancePaypalLinks.innerHTML = paypalLinks.map((link) => `
@@ -599,11 +614,11 @@ function renderPaymentLinks(payments) {
 
   if (zelle.enabled && zelle.qr_url) {
     el.balanceZelleQr.src = zelle.qr_url;
-    el.balanceZelleLabel.textContent = zelle.label || "Zelle";
+    el.balanceZelleRecipient.textContent = zelle.label || "Zelle";
     el.balanceZellePayment.classList.remove("hidden");
   } else {
     el.balanceZelleQr.removeAttribute("src");
-    el.balanceZelleLabel.textContent = "";
+    el.balanceZelleRecipient.textContent = "";
     el.balanceZelleDetails.classList.add("hidden");
     el.balanceZellePayment.classList.add("hidden");
   }
@@ -656,8 +671,18 @@ async function copyCryptoWallet() {
 
 function syncTopupAmount(source) {
   const value = source.value || "10";
-  el.topupAmount.value = value;
-  el.balanceTopupAmount.value = value;
+  if (el.topupAmount) el.topupAmount.value = value;
+  if (el.balanceTopupAmount) el.balanceTopupAmount.value = value;
+}
+
+function selectedTopupAmount() {
+  return String(Number(
+    el.balanceTopupAmount?.value
+      || el.topupAmount?.value
+      || state.account?.payments_config?.minimum_topup_usd
+      || state.config?.payments?.minimum_topup_usd
+      || 10,
+  ));
 }
 
 function renderCryptoPaymentIntent(intent, matched = false) {
@@ -697,7 +722,7 @@ async function createCryptoTopup() {
   try {
     const intent = await api("/billing/crypto/topup-intent", {
       method: "POST",
-      body: { amount_usd: String(Number(el.balanceTopupAmount.value || el.topupAmount.value || 0)) },
+      body: { amount_usd: selectedTopupAmount() },
     });
     renderCryptoPaymentIntent(intent);
   } catch (error) {
@@ -1051,11 +1076,11 @@ for (const control of [el.search, el.provider, el.input, el.output]) {
 
 el.quoteButton.addEventListener("click", quoteRequest);
 el.runButton.addEventListener("click", runEncryptedInference);
-el.topupButton.addEventListener("click", quoteTopup);
+el.topupButton?.addEventListener("click", quoteTopup);
 el.balanceCard.addEventListener("click", toggleBalancePayments);
 el.balanceZelleToggle.addEventListener("click", toggleZellePayment);
-el.balanceTopupAmount.addEventListener("input", () => syncTopupAmount(el.balanceTopupAmount));
-el.topupAmount.addEventListener("input", () => syncTopupAmount(el.topupAmount));
+el.balanceTopupAmount?.addEventListener("input", () => syncTopupAmount(el.balanceTopupAmount));
+el.topupAmount?.addEventListener("input", () => syncTopupAmount(el.topupAmount));
 el.balanceCryptoCreate.addEventListener("click", () => createCryptoTopup().catch((error) => {
   el.balanceCryptoResult.textContent = error.message;
   el.balanceCryptoResult.classList.remove("hidden");
