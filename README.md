@@ -45,7 +45,7 @@ For deterministic builds, the release script sorts archive entries, fixes owner/
 
 1. The client logs in with Firebase and receives a backend session.
 2. The client asks the backend for a fresh model attestation and checks the nonce and encryption public key in the attestation response.
-3. The client generates a secp256k1 key, encrypts the prompt locally with AES-GCM using the RedPill E2EE v2 protocol, and sends only ciphertext to the Trust backend.
+3. The client generates a secp256k1 key, encrypts the prompt locally with AES-GCM using the RedPill E2EE protocol, and sends only ciphertext to the Trust backend. The live deployment defaults to v1 compatibility mode; v2 AAD support remains in the source for providers that accept it.
 4. The backend verifies balance, forwards the ciphertext and E2EE headers to the confidential inference provider, and stores metadata only.
 5. The client decrypts the encrypted response locally.
 

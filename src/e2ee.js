@@ -140,27 +140,34 @@ export async function createEncryptedChatRequest({
   modelPublicKey,
   maxCompletionTokens,
   temperature = 0.7,
+  e2eeVersion = "1",
 }) {
   const clientPrivateKey = randomPrivateKey();
   const clientPublicKey = clientPublicKeyHex64(clientPrivateKey);
   const nonce = bytesToHex(randomBytes(16));
   const timestamp = String(Math.floor(Date.now() / 1000));
-  const requestAad = `v2|req|algo=ecdsa|model=${modelId}|m=0|c=-|n=${nonce}|ts=${timestamp}`;
+  const version = String(e2eeVersion) === "2" ? "2" : "1";
+  const requestAad =
+    version === "2" ? `v2|req|algo=ecdsa|model=${modelId}|m=0|c=-|n=${nonce}|ts=${timestamp}` : "";
   const encryptedPrompt = await encryptForModel(prompt, modelPublicKey, requestAad);
+  const headers = {
+    "X-Signing-Algo": "ecdsa",
+    "X-Client-Pub-Key": clientPublicKey,
+    "X-Model-Pub-Key": cleanHex(modelPublicKey),
+  };
+  if (version === "2") {
+    headers["X-E2EE-Version"] = "2";
+    headers["X-E2EE-Nonce"] = nonce;
+    headers["X-E2EE-Timestamp"] = timestamp;
+  }
 
   return {
     clientPrivateKey,
     nonce,
     timestamp,
+    version,
     modelId,
-    headers: {
-      "X-Signing-Algo": "ecdsa",
-      "X-Client-Pub-Key": clientPublicKey,
-      "X-Model-Pub-Key": cleanHex(modelPublicKey),
-      "X-E2EE-Version": "2",
-      "X-E2EE-Nonce": nonce,
-      "X-E2EE-Timestamp": timestamp,
-    },
+    headers,
     body: {
       model: modelId,
       messages: [{ role: "user", content: encryptedPrompt }],
@@ -171,19 +178,22 @@ export async function createEncryptedChatRequest({
   };
 }
 
-export async function decryptChatResponse({ response, clientPrivateKey, nonce, timestamp }) {
+export async function decryptChatResponse({ response, clientPrivateKey, nonce, timestamp, version = "1" }) {
   const choices = Array.isArray(response?.choices) ? response.choices : [];
   const decryptedChoices = [];
+  const useAad = String(version) === "2";
   for (let index = 0; index < choices.length; index += 1) {
     const choice = choices[index] || {};
     const message = choice.message || {};
-    const decrypted = { index, content: "", reasoning_content: "" };
-    for (const field of ["content", "reasoning_content"]) {
+    const decrypted = { index, content: "", reasoning_content: "", reasoning: "" };
+    for (const field of ["content", "reasoning_content", "reasoning"]) {
       if (!message[field]) continue;
       if (!isLikelyCiphertextHex(message[field])) {
         throw new Error(`Response field ${field} is not encrypted ciphertext`);
       }
-      const aad = `v2|resp|algo=ecdsa|model=${response.model || ""}|id=${response.id || ""}|choice=${index}|field=${field}|n=${nonce}|ts=${timestamp}`;
+      const aad = useAad
+        ? `v2|resp|algo=ecdsa|model=${response.model || ""}|id=${response.id || ""}|choice=${index}|field=${field}|n=${nonce}|ts=${timestamp}`
+        : "";
       decrypted[field] = await decryptFromModel(message[field], clientPrivateKey, aad);
     }
     decryptedChoices.push(decrypted);

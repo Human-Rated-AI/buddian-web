@@ -1000,6 +1000,7 @@ async function runEncryptedInference() {
       },
     });
     const canonicalModel = attestation.canonical_model_id || state.selectedModel;
+    const requestModel = state.selectedModel;
     const clientCheck = verifyAttestationForClient({
       attestation: attestation.attestation,
       nonce: attestation.attestation_nonce,
@@ -1011,7 +1012,7 @@ async function runEncryptedInference() {
 
     const encrypted = await createEncryptedChatRequest({
       prompt,
-      modelId: canonicalModel,
+      modelId: requestModel,
       modelPublicKey: attestation.model_public_key,
       maxCompletionTokens: Number(el.completionTokens.value || 512),
     });
@@ -1043,9 +1044,10 @@ async function runEncryptedInference() {
       clientPrivateKey: encrypted.clientPrivateKey,
       nonce: encrypted.nonce,
       timestamp: encrypted.timestamp,
+      version: response.e2ee?.version || encrypted.version,
     });
 
-    const answer = decrypted.map((choice) => choice.content || choice.reasoning_content).filter(Boolean).join("\n\n");
+    const answer = decrypted.map((choice) => choice.content || choice.reasoning_content || choice.reasoning).filter(Boolean).join("\n\n");
     el.inferenceResult.textContent = answer || "(empty response)";
     const proofVerification = response.proof?.verification || {};
     el.proofResult.textContent = [
