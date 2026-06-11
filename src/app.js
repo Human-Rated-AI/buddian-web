@@ -1047,10 +1047,12 @@ async function runEncryptedInference() {
 
     const answer = decrypted.map((choice) => choice.content || choice.reasoning_content).filter(Boolean).join("\n\n");
     el.inferenceResult.textContent = answer || "(empty response)";
+    const proofVerification = response.proof?.verification || {};
     el.proofResult.textContent = [
       t("attestation_ok"),
       `${t("e2ee_applied")}: ${String(response.e2ee?.applied || false)}`,
       `${t("response_signature")}: ${response.signature ? t("present") : t("missing")}`,
+      `${t("proof_verification")}: ${proofVerification.status || "n/a"} (${proofVerification.mode || "n/a"})`,
       `request id: ${response.upstream_response?.id || "n/a"}`,
       `request sha256: ${response.proof?.request_sha256 || "n/a"}`,
       `response sha256: ${response.proof?.response_sha256 || "n/a"}`,
