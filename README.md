@@ -54,7 +54,7 @@ npm ci
 npm run verify:proof -- path/to/trust-ai-proof.json
 ```
 
-The verifier checks that the request hash matches the encrypted request, the response hash matches the exact encrypted upstream response text when present, request and response content are ciphertext-shaped, the bundle contains no obvious plaintext prompt/answer fields, and the backend proof checks report verified status. It does not contact Trust AI or the provider, so it does not refresh attestation; it validates the saved proof bundle.
+The verifier checks that the request hash matches the encrypted request, the response hash matches the exact encrypted upstream response text when present, the saved attestation report contains the expected nonce and model encryption key, request and response content are ciphertext-shaped, the bundle contains no obvious plaintext prompt/answer fields, and the backend proof checks report verified status. It does not contact Trust AI or the provider, so it does not refresh attestation; it validates the saved proof bundle.
 
 ## Encrypted Inference Flow
 

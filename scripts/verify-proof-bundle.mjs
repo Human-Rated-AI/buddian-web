@@ -39,6 +39,29 @@ function walk(value, path = "$", visitor = () => {}) {
   }
 }
 
+function nestedHasValue(value, expected) {
+  if (!expected) return false;
+  if (typeof value === "string" && cleanHex(value) === cleanHex(expected)) return true;
+  if (Array.isArray(value)) return value.some((item) => nestedHasValue(item, expected));
+  if (value && typeof value === "object") {
+    return Object.values(value).some((nested) => nestedHasValue(nested, expected));
+  }
+  return false;
+}
+
+function nestedHasNonce(value, nonce) {
+  const expected = cleanHex(nonce);
+  if (!expected) return false;
+  if (Array.isArray(value)) return value.some((item) => nestedHasNonce(item, nonce));
+  if (value && typeof value === "object") {
+    for (const [key, nested] of Object.entries(value)) {
+      if ((key === "request_nonce" || key === "nonce") && cleanHex(String(nested)) === expected) return true;
+      if (nestedHasNonce(nested, nonce)) return true;
+    }
+  }
+  return false;
+}
+
 function collectPlaintextKeyFindings(bundle) {
   const findings = [];
   walk(bundle, "$", (value, path) => {
@@ -144,6 +167,16 @@ export function verifyProofBundle(bundle) {
   if (!bundle.model_id) failures.push("model_id is missing");
   if (!bundle.attestation?.nonce) failures.push("attestation.nonce is missing");
   if (!bundle.attestation?.model_public_key) failures.push("attestation.model_public_key is missing");
+  if (!bundle.attestation?.report) {
+    warnings.push("attestation.report is missing");
+  } else {
+    if (!nestedHasNonce(bundle.attestation.report, bundle.attestation.nonce)) {
+      failures.push("attestation.report does not contain the expected nonce");
+    }
+    if (!nestedHasValue(bundle.attestation.report, bundle.attestation.model_public_key)) {
+      failures.push("attestation.report does not contain the expected model public key");
+    }
+  }
   if (!bundle.client_attestation?.ok) failures.push("client_attestation.ok is not true");
   if (!bundle.e2ee_request_headers?.["X-Client-Pub-Key"]) failures.push("X-Client-Pub-Key is missing");
   if (!bundle.e2ee_request_headers?.["X-Model-Pub-Key"]) failures.push("X-Model-Pub-Key is missing");

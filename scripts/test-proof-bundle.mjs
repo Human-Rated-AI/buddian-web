@@ -28,6 +28,10 @@ const bundle = {
   attestation: {
     nonce: "00".repeat(32),
     model_public_key: "02" + "11".repeat(32),
+    report: {
+      request_nonce: "00".repeat(32),
+      model_public_key: "02" + "11".repeat(32),
+    },
   },
   client_attestation: { ok: true },
   encrypted_request: encryptedRequest,
@@ -72,5 +76,9 @@ assert.equal(verifyProofBundle(plaintextKey).ok, false);
 const tamperedResponseText = structuredClone(bundle);
 tamperedResponseText.encrypted_response_text = JSON.stringify({ id: "changed" });
 assert.equal(verifyProofBundle(tamperedResponseText).ok, false);
+
+const tamperedAttestation = structuredClone(bundle);
+tamperedAttestation.attestation.report.request_nonce = "ff".repeat(32);
+assert.equal(verifyProofBundle(tamperedAttestation).ok, false);
 
 console.log("proof bundle verifier tests passed");

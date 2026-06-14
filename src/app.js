@@ -158,6 +158,7 @@ function makeProofBundle({
       key_field: attestation.key_field,
       canonical_model: attestation.canonical_model,
       report_sha256: attestation.report_sha256,
+      report: attestation.attestation,
     },
     client_attestation: clientAttestation,
     encrypted_request: encrypted.body,
