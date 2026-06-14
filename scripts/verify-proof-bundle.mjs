@@ -197,13 +197,27 @@ export function verifyProofBundle(bundle) {
   if (verification.verified !== true) {
     failures.push(`proof.verification.verified is not true (status: ${verification.status || "missing"})`);
   }
-  for (const required of ["request_hash", "response_hash", "signature_address"]) {
+  for (const required of [
+    "signature_present",
+    "signature_text_parse",
+    "request_hash_matches",
+    "response_hash_matches",
+    "signature_recovers_signer",
+    "signer_attestation_fetched",
+    "attestation_signing_address_matches",
+    "attestation_nonce_matches",
+  ]) {
     const check = verification.checks?.[required];
     if (!check || check.ok !== true) {
       failures.push(`proof verification check failed or missing: ${required}`);
     }
   }
-  for (const optional of ["signer_attestation", "tdx_quote", "gpu_attestation"]) {
+  for (const optional of [
+    "tdx_quote_verified",
+    "tdx_report_data_binds_signer",
+    "tdx_report_data_binds_nonce",
+    "gpu_attestation_verified",
+  ]) {
     const check = verification.checks?.[optional];
     if (!check) warnings.push(`proof verification check is missing: ${optional}`);
     else if (check.ok !== true) warnings.push(`proof verification check is not fully passing: ${optional}`);
