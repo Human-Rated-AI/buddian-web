@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#f7f8fa">
+    <meta name="theme-color" content="#0a0f12">
     <meta name="description" content="Trust AI protects AI requests with client-side encryption and secure GPU execution.">
     <title>Trust AI</title>
     <link rel="stylesheet" href="/styles.css">
@@ -11,9 +11,19 @@
   <body>
     <header class="topbar">
       <div class="brand">
-        <h1 data-i18n="app_name">Trust AI</h1>
-        <p id="topbar-subtitle" class="subline" data-i18n="subtitle">Private AI requests on secure GPUs</p>
+        <span class="brand-mark" aria-hidden="true">T</span>
+        <div>
+          <h1 data-i18n="app_name">Trust AI</h1>
+          <p id="topbar-subtitle" class="subline" data-i18n="subtitle">Private AI requests on secure GPUs</p>
+        </div>
       </div>
+      <nav id="app-nav" class="app-nav hidden" aria-label="Application navigation">
+        <a href="#overview" data-i18n="nav_overview">Overview</a>
+        <a href="#generate" data-i18n="nav_generate">Generate</a>
+        <a href="#models" data-i18n="nav_models">Models</a>
+        <a href="#history" data-i18n="nav_history">History</a>
+        <a href="#balance-payment-panel" data-i18n="nav_balance">Balance</a>
+      </nav>
       <div class="top-actions">
         <a class="top-link" href="#how-it-works" data-i18n="how_it_works">How it works</a>
         <div id="global-language-switch" class="global-language-switch" role="group" aria-label="Language">
@@ -149,123 +159,104 @@
       </section>
 
       <section id="app-shell" class="hidden">
-        <section class="account-strip">
-          <button id="balance-card" class="balance-card" type="button" aria-expanded="true" aria-controls="balance-payment-panel" data-i18n-aria-label="open_topup_options">
-            <span data-i18n="balance">Balance</span>
-            <strong id="user-balance">$0.00</strong>
-          </button>
-          <div>
-            <span data-i18n="status">Status</span>
-            <strong id="service-status" data-i18n="checking">Checking</strong>
+        <section id="overview" class="app-overview">
+          <div class="app-heading">
+            <div>
+              <p class="eyebrow" data-i18n="overview">Overview</p>
+              <h2 data-i18n="overview_title">Private AI control center</h2>
+              <p data-i18n="overview_subtitle">Add balance, choose a protected model, and run encrypted inference from one screen.</p>
+            </div>
+            <button id="balance-card" class="balance-card" type="button" aria-expanded="false" aria-controls="balance-payment-panel" data-i18n-aria-label="open_topup_options">
+              <span data-i18n="balance">Balance</span>
+              <strong id="user-balance">$0.00</strong>
+              <small data-i18n="add_balance">Add Balance</small>
+            </button>
           </div>
-          <div>
-            <span data-i18n="account">Account</span>
-            <strong id="account-email" data-i18n="signed_in">Signed in</strong>
-          </div>
-        </section>
 
-        <section id="balance-payment-panel" class="balance-payment-panel" aria-label="Payment options" data-i18n-aria-label="payment_options">
-          <div class="section-head">
-            <h2 data-i18n="top_up">Top Up</h2>
-            <span id="payment-minimum" class="count"></span>
-          </div>
-          <div class="payment-actions">
-            <input id="balance-topup-amount" type="hidden" value="10">
-            <input id="topup-amount" type="hidden" value="10">
-            <div id="balance-paypal-links" class="payment-link-grid hidden" aria-label="PayPal payment links"></div>
-            <section id="balance-zelle-payment" class="zelle-payment hidden" aria-label="Zelle payment" data-i18n-aria-label="zelle_payment">
-              <button id="balance-zelle-toggle" class="secondary-button" type="button" data-i18n="pay_with_zelle">Pay with Zelle</button>
-              <div id="balance-zelle-details" class="zelle-details hidden">
-                <img id="balance-zelle-qr" class="zelle-qr" alt="Zelle QR code" data-i18n-alt="zelle_qr_alt">
-                <p><span data-i18n="zelle_recipient">Recipient</span>: <code id="balance-zelle-recipient"></code></p>
-                <p data-i18n="zelle_manual_credit">Use your Trust account email in the Zelle memo. Balance is credited after confirmation.</p>
-              </div>
-            </section>
-            <button id="balance-crypto-create" class="secondary-button hidden" type="button" data-i18n="pay_with_crypto">Pay with crypto</button>
-            <a id="balance-crypto-checkout" class="pay-link hidden" href="#" target="_blank" rel="noopener" data-i18n="open_crypto_checkout">Open crypto checkout</a>
-            <button id="balance-crypto-copy" class="secondary-button hidden" type="button" data-i18n="copy_crypto_payment">Copy payment details</button>
-            <button id="balance-crypto-check" class="secondary-button hidden" type="button" data-i18n="check_crypto_payment">Check crypto payment</button>
-            <code id="balance-crypto-wallet" class="wallet-value hidden"></code>
-            <output id="balance-crypto-result" class="result hidden"></output>
-            <button id="balance-transactions-link" class="secondary-button" type="button" data-i18n="show_transactions">Show transactions</button>
-            <div id="balance-transaction-list" class="compact-list hidden"></div>
-            <p id="balance-payment-empty" class="empty" data-i18n="payment_links_unavailable">Payment links are being configured.</p>
-          </div>
-        </section>
+          <section class="account-strip">
+            <div class="stat-card">
+              <span data-i18n="total_spent">Total Spent</span>
+              <strong id="user-total-spent">$0.00</strong>
+              <div class="sparkline" aria-hidden="true"></div>
+            </div>
+            <div class="stat-card">
+              <span data-i18n="active_jobs">Active Jobs</span>
+              <strong id="active-jobs">0</strong>
+              <small data-i18n="active_jobs_help">Live running jobs</small>
+            </div>
+            <div class="stat-card">
+              <span data-i18n="status">Status</span>
+              <strong id="service-status" data-i18n="checking">Checking</strong>
+              <small id="account-email" data-i18n="signed_in">Signed in</small>
+            </div>
+            <div class="stat-card protected-card">
+              <span data-i18n="protected_status">GPU TEE</span>
+              <strong data-i18n="protected">Protected</strong>
+              <small data-i18n="protected_short">Your data is encrypted and processed in a trusted environment.</small>
+            </div>
+          </section>
 
-        <section class="workflow-strip" aria-label="Customer workflow">
-          <article>
-            <strong data-i18n="workflow_pay_title">Add funds</strong>
-            <span data-i18n="workflow_pay_text">Use PayPal presets, Zelle, or crypto. Minimum $10.</span>
-          </article>
-          <article>
-            <strong data-i18n="workflow_use_title">Use pre-installed</strong>
-            <span data-i18n="workflow_use_text">Pick a secure model, enter a prompt, quote, then run.</span>
-          </article>
-          <article>
-            <strong data-i18n="workflow_install_title">Install new models</strong>
-            <span data-i18n="workflow_install_text">Review installable sources below and manage added models.</span>
-          </article>
-        </section>
-
-        <section class="toolbar" aria-label="Model filters">
-          <label>
-            <span data-i18n="search">Search</span>
-            <input id="search" type="search" autocomplete="off" placeholder="deepseek, qwen, image" data-i18n-placeholder="search_placeholder">
-          </label>
-
-          <label>
-            <span data-i18n="provider">Provider</span>
-            <select id="provider">
-              <option value="standard" data-i18n="preinstalled_secure">Pre-installed secure</option>
-              <option value="" data-i18n="all_available">All available</option>
-              <option value="phala/">phala/</option>
-              <option value="openai/">openai/</option>
-              <option value="anthropic/">anthropic/</option>
-              <option value="google/">google/</option>
-              <option value="qwen/">qwen/</option>
-            </select>
-          </label>
-
-          <label>
-            <span data-i18n="input">Input</span>
-            <select id="input-modality">
-              <option value="" data-i18n="any">Any</option>
-              <option value="text" data-i18n="text">Text</option>
-              <option value="image" data-i18n="image">Image</option>
-              <option value="file" data-i18n="file">File</option>
-              <option value="audio" data-i18n="audio">Audio</option>
-              <option value="video" data-i18n="video">Video</option>
-            </select>
-          </label>
-
-          <label>
-            <span data-i18n="output">Output</span>
-            <select id="output-modality">
-              <option value="" data-i18n="any">Any</option>
-              <option value="text" data-i18n="text">Text</option>
-              <option value="image" data-i18n="image">Image</option>
-              <option value="audio" data-i18n="audio">Audio</option>
-              <option value="video" data-i18n="video">Video</option>
-            </select>
-          </label>
-        </section>
-
-        <section class="workbench">
-          <div class="models-panel">
+          <section id="balance-payment-panel" class="balance-payment-panel hidden" aria-label="Payment options" data-i18n-aria-label="payment_options">
             <div class="section-head">
               <div>
-                <h2 data-i18n="preinstalled_models">Pre-installed Models</h2>
-                <p class="section-subtitle" data-i18n="preinstalled_models_help">Start here: choose a secure model, then run it in Private Inference.</p>
+                <h2 data-i18n="top_up">Top Up</h2>
+                <p class="section-subtitle" data-i18n="top_up_help">Choose PayPal, Zelle, or crypto. Use your Trust account email in payment notes when possible.</p>
               </div>
-              <span id="model-count" class="count">0</span>
+              <span id="payment-minimum" class="count"></span>
             </div>
-            <div id="model-list" class="model-list" aria-live="polite"></div>
-          </div>
+            <div class="payment-actions">
+              <input id="balance-topup-amount" type="hidden" value="10">
+              <input id="topup-amount" type="hidden" value="10">
+              <div id="balance-paypal-links" class="payment-link-grid hidden" aria-label="PayPal payment links"></div>
+              <section id="balance-zelle-payment" class="zelle-payment hidden" aria-label="Zelle payment" data-i18n-aria-label="zelle_payment">
+                <button id="balance-zelle-toggle" class="secondary-button" type="button" data-i18n="pay_with_zelle">Pay with Zelle</button>
+                <div id="balance-zelle-details" class="zelle-details hidden">
+                  <img id="balance-zelle-qr" class="zelle-qr" alt="Zelle QR code" data-i18n-alt="zelle_qr_alt">
+                  <p><span data-i18n="zelle_recipient">Recipient</span>: <code id="balance-zelle-recipient"></code></p>
+                  <p data-i18n="zelle_manual_credit">Use your Trust account email in the Zelle memo. Balance is credited after confirmation.</p>
+                </div>
+              </section>
+              <button id="balance-crypto-create" class="secondary-button hidden" type="button" data-i18n="pay_with_crypto">Pay with crypto</button>
+              <a id="balance-crypto-checkout" class="pay-link hidden" href="#" target="_blank" rel="noopener" data-i18n="open_crypto_checkout">Open crypto checkout</a>
+              <button id="balance-crypto-copy" class="secondary-button hidden" type="button" data-i18n="copy_crypto_payment">Copy payment details</button>
+              <button id="balance-crypto-check" class="secondary-button hidden" type="button" data-i18n="check_crypto_payment">Check crypto payment</button>
+              <code id="balance-crypto-wallet" class="wallet-value hidden"></code>
+              <output id="balance-crypto-result" class="result hidden"></output>
+              <button id="balance-transactions-link" class="secondary-button" type="button" data-i18n="show_transactions">Show transactions</button>
+              <div id="balance-transaction-list" class="compact-list hidden"></div>
+              <p id="balance-payment-empty" class="empty" data-i18n="payment_links_unavailable">Payment links are being configured.</p>
+            </div>
+          </section>
 
-          <aside class="side-panel">
+          <section class="workflow-strip" aria-label="Customer workflow">
+            <article>
+              <strong data-i18n="workflow_pay_title">Add funds</strong>
+              <span data-i18n="workflow_pay_text">Use PayPal presets, Zelle, or crypto. Minimum $10.</span>
+            </article>
+            <article>
+              <strong data-i18n="workflow_use_title">Use pre-installed</strong>
+              <span data-i18n="workflow_use_text">Pick a secure model, enter a prompt, quote, then run.</span>
+            </article>
+            <article>
+              <strong data-i18n="workflow_install_title">Install new models</strong>
+              <span data-i18n="workflow_install_text">Review installable sources below and manage added models.</span>
+            </article>
+          </section>
+        </section>
+
+        <section id="generate" class="workbench">
+          <aside class="side-panel generate-panel">
             <div class="section-head">
-              <h2 data-i18n="private_inference">Private Inference</h2>
+              <div>
+                <h2 data-i18n="private_inference">Private Inference</h2>
+                <p class="section-subtitle" data-i18n="generate_help">Start with text. Image, video, and audio models appear as installable model support expands.</p>
+              </div>
+            </div>
+
+            <div class="mode-tabs" role="tablist" aria-label="Output mode">
+              <button type="button" class="active" data-i18n="text">Text</button>
+              <button type="button" disabled data-i18n="image">Image</button>
+              <button type="button" disabled data-i18n="video">Video</button>
             </div>
 
             <label>
@@ -294,27 +285,95 @@
             <button id="quote-button" type="button" data-i18n="quote_request">Quote request</button>
             <output id="quote-result" class="result" data-i18n="select_model">Select a model.</output>
             <button id="run-button" type="button" data-i18n="run_encrypted">Run encrypted request</button>
-            <output id="proof-result" class="result proof-result" data-i18n="proof_waiting">Proof will appear here.</output>
-            <output id="inference-result" class="result inference-result" data-i18n="response_waiting">Encrypted response will be decrypted here.</output>
+          </aside>
 
+          <section class="result-panel">
             <div class="section-head section-gap">
-              <div>
-                <h2 data-i18n="installable_models">Installable Models</h2>
-                <p class="section-subtitle" data-i18n="installable_models_help">Use this list for new Hugging Face, Nvidia, and open-weight models as installation support is enabled.</p>
-              </div>
+              <h2 data-i18n="result">Result</h2>
             </div>
-            <div id="installable-list" class="compact-list"></div>
+            <output id="inference-result" class="result inference-result" data-i18n="response_waiting">Encrypted response will be decrypted here.</output>
+            <output id="proof-result" class="result proof-result" data-i18n="proof_waiting">Proof will appear here.</output>
+          </section>
+        </section>
 
-            <div class="section-head section-gap">
+        <section id="models" class="models-panel">
+          <div class="section-head">
+            <div>
+              <h2 data-i18n="preinstalled_models">Pre-installed Models</h2>
+              <p class="section-subtitle" data-i18n="preinstalled_models_help">Start here: choose a secure model, then run it in Private Inference.</p>
+            </div>
+            <span id="model-count" class="count">0</span>
+          </div>
+
+          <section class="toolbar" aria-label="Model filters">
+            <label>
+              <span data-i18n="search">Search</span>
+              <input id="search" type="search" autocomplete="off" placeholder="deepseek, qwen, image" data-i18n-placeholder="search_placeholder">
+            </label>
+
+            <label>
+              <span data-i18n="provider">Provider</span>
+              <select id="provider">
+                <option value="standard" data-i18n="preinstalled_secure">Pre-installed secure</option>
+                <option value="" data-i18n="all_available">All available</option>
+                <option value="phala/">phala/</option>
+                <option value="openai/">openai/</option>
+                <option value="anthropic/">anthropic/</option>
+                <option value="google/">google/</option>
+                <option value="qwen/">qwen/</option>
+              </select>
+            </label>
+
+            <label>
+              <span data-i18n="input">Input</span>
+              <select id="input-modality">
+                <option value="" data-i18n="any">Any</option>
+                <option value="text" data-i18n="text">Text</option>
+                <option value="image" data-i18n="image">Image</option>
+                <option value="file" data-i18n="file">File</option>
+                <option value="audio" data-i18n="audio">Audio</option>
+                <option value="video" data-i18n="video">Video</option>
+              </select>
+            </label>
+
+            <label>
+              <span data-i18n="output">Output</span>
+              <select id="output-modality">
+                <option value="" data-i18n="any">Any</option>
+                <option value="text" data-i18n="text">Text</option>
+                <option value="image" data-i18n="image">Image</option>
+                <option value="audio" data-i18n="audio">Audio</option>
+                <option value="video" data-i18n="video">Video</option>
+              </select>
+            </label>
+          </section>
+
+          <div id="model-list" class="model-list" aria-live="polite"></div>
+        </section>
+
+        <section id="history" class="history-grid">
+          <section class="history-card">
+            <div class="section-head">
               <h2 data-i18n="usage">Usage</h2>
             </div>
             <div id="usage-list" class="compact-list"></div>
-
+          </section>
+          <section class="history-card">
             <div id="transactions-section" class="section-head section-gap">
               <h2 data-i18n="transactions">Transactions</h2>
             </div>
-            <div id="transaction-list" class="compact-list hidden"></div>
-          </aside>
+            <div id="transaction-list" class="compact-list"></div>
+          </section>
+        </section>
+
+        <section id="install" class="install-card">
+          <div class="section-head">
+            <div>
+              <h2 data-i18n="installable_models">Installable Models</h2>
+              <p class="section-subtitle" data-i18n="installable_models_help">Use this list for new Hugging Face, Nvidia, and open-weight models as installation support is enabled.</p>
+            </div>
+          </div>
+          <div id="installable-list" class="compact-list"></div>
         </section>
       </section>
 

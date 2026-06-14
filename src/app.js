@@ -42,6 +42,7 @@ const el = {
   landing: $("#landing"),
   appShell: $("#app-shell"),
   extensionShell: $("#extension-shell"),
+  appNav: $("#app-nav"),
   authButton: $("#auth-button"),
   authAvatar: $("#auth-avatar"),
   authName: $("#auth-name"),
@@ -53,6 +54,8 @@ const el = {
   status: $("#service-status"),
   accountEmail: $("#account-email"),
   userBalance: $("#user-balance"),
+  userTotalSpent: $("#user-total-spent"),
+  activeJobs: $("#active-jobs"),
   balanceCard: $("#balance-card"),
   balancePaymentPanel: $("#balance-payment-panel"),
   balanceTopupAmount: $("#balance-topup-amount"),
@@ -545,18 +548,22 @@ function renderAuthHeader(loggedIn) {
 }
 
 function isAdminRoute() {
-  return window.location.pathname.replace(/\/+$/, "") === "/admin";
+  const path = window.location.pathname.replace(/\/+$/, "");
+  return path === "/admin" || path.startsWith("/admin/");
 }
 
 function renderRoute() {
   const adminRoute = isAdminRoute();
   const loggedIn = Boolean(state.token && state.account);
+  document.body.classList.toggle("app-mode", loggedIn && !adminRoute);
+  document.body.classList.toggle("admin-mode", adminRoute);
 
   renderAuthHeader(loggedIn);
 
   el.landing.classList.toggle("hidden", loggedIn);
   el.appShell.classList.toggle("hidden", !loggedIn || adminRoute);
   el.extensionShell.classList.add("hidden");
+  el.appNav?.classList.toggle("hidden", !loggedIn || adminRoute);
 
   if (!loggedIn) {
     el.authNote.textContent = firebaseConfigured() ? t("signin_required") : t("signin_unconfigured");
@@ -594,6 +601,8 @@ function renderAccount() {
   const user = state.account?.user || {};
   el.accountEmail.textContent = user.email || user.display_name || t("account");
   el.userBalance.textContent = money(user.balance?.available_usd || 0);
+  if (el.userTotalSpent) el.userTotalSpent.textContent = money(totalUsageSpent());
+  if (el.activeJobs) el.activeJobs.textContent = String(activeJobCount());
   renderAuthHeader(true);
   const status = state.account?.service_status || t("available");
   if (el.status) el.status.textContent = status === "Available" ? t("available") : status;
@@ -601,6 +610,20 @@ function renderAccount() {
   renderPaymentLinks(payments);
   renderUsage();
   renderTransactions();
+}
+
+function totalUsageSpent() {
+  return (state.account?.usage || []).reduce((total, item) => {
+    return total + Math.max(0, Number(item.user_charge_usd || 0));
+  }, 0);
+}
+
+function activeJobCount() {
+  const activeStatuses = new Set(["running", "pending", "reserved", "processing", "queued"]);
+  return (state.account?.usage || []).filter((item) => {
+    const status = String(item.metadata?.status || item.status || item.action || "").toLowerCase();
+    return activeStatuses.has(status);
+  }).length;
 }
 
 function renderPaymentLinks(payments) {
@@ -823,6 +846,7 @@ function renderTransactions() {
 
 function showTransactions() {
   el.balanceTransactionList.classList.remove("hidden");
+  el.transactionList?.classList.remove("hidden");
   renderTransactions();
   el.balanceTransactionList.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
