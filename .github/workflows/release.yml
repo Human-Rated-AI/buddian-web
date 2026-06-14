@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "trust-web-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build release artifacts
+        run: npm run release
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            release/trust-web.tar.gz \
+            release/trust-web.sha256 \
+            release/trust-web.release.json \
+            --title "$GITHUB_REF_NAME" \
+            --notes "Trust Web release for commit $GITHUB_SHA. Verify with: sha256sum -c trust-web.sha256"

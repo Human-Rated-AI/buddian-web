@@ -6,6 +6,7 @@ cd "$(dirname "$0")/.."
 release_dir="release"
 archive="$release_dir/trust-web.tar.gz"
 checksum="$release_dir/trust-web.sha256"
+manifest="$release_dir/trust-web.release.json"
 
 rm -rf "$release_dir"
 mkdir -p "$release_dir"
@@ -21,6 +22,26 @@ tar \
   -czf "$archive" \
   -C dist .
 
-sha256sum "$archive" > "$checksum"
+(
+  cd "$release_dir"
+  sha256sum trust-web.tar.gz > trust-web.sha256
+)
+
+archive_sha256="$(cut -d ' ' -f 1 "$checksum")"
+commit="$(git rev-parse HEAD)"
+cat > "$manifest" <<JSON
+{
+  "name": "trust-web",
+  "commit": "$commit",
+  "archive": "trust-web.tar.gz",
+  "archive_sha256": "$archive_sha256",
+  "source_date_epoch": "$SOURCE_DATE_EPOCH"
+}
+JSON
+
+(
+  cd "$release_dir"
+  sha256sum trust-web.release.json >> trust-web.sha256
+)
 
 cat "$checksum"

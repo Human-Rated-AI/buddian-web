@@ -29,15 +29,19 @@ This creates:
 ```text
 release/trust-web.tar.gz
 release/trust-web.sha256
+release/trust-web.release.json
 ```
 
 Verify the local archive:
 
 ```bash
-sha256sum -c release/trust-web.sha256
+cd release
+sha256sum -c trust-web.sha256
 ```
 
-To compare with the hosted release, download the published `trust-web.tar.gz` and `trust-web.sha256`, then run the same `sha256sum -c` command in the download directory. Matching checksums mean the downloadable client archive matches the published build artifact for that release.
+To compare with the hosted release, download the published `trust-web.tar.gz`, `trust-web.sha256`, and `trust-web.release.json`, then run the same `sha256sum -c trust-web.sha256` command in the download directory. Matching checksums mean the downloadable client archive and release manifest match the published build artifacts for that release.
+
+GitHub releases are published automatically for tags named `trust-web-v*`. The release assets always include the archive, checksum file, and JSON manifest with the source commit and archive SHA-256.
 
 For deterministic builds, the release script sorts archive entries, fixes owner/group metadata, and uses `SOURCE_DATE_EPOCH`. To reproduce a specific release exactly, check out the release tag, use the Node version in `package.json`, run `npm ci`, and then run `npm run release`.
 
