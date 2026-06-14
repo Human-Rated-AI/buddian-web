@@ -24,6 +24,7 @@ const state = {
   models: [],
   selectedModel: "",
   currentCryptoPayment: null,
+  lastProofBundle: null,
   language: normalizeLanguage(localStorage.getItem("trust_language") || browserLanguage()),
   firebase: {
     modules: null,
@@ -88,6 +89,7 @@ const el = {
   quoteButton: $("#quote-button"),
   quoteResult: $("#quote-result"),
   runButton: $("#run-button"),
+  proofDownload: $("#proof-download"),
   proofResult: $("#proof-result"),
   inferenceResult: $("#inference-result"),
   topupAmount: $("#topup-amount"),
@@ -127,6 +129,67 @@ function applyTranslations(root = document) {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", active ? "true" : "false");
   });
+}
+
+function clearProofBundle() {
+  state.lastProofBundle = null;
+  el.proofDownload?.classList.add("hidden");
+  if (el.proofDownload) el.proofDownload.disabled = true;
+}
+
+function makeProofBundle({
+  modelId,
+  canonicalModelId,
+  attestation,
+  clientAttestation,
+  encrypted,
+  response,
+}) {
+  return {
+    schema: "trust-ai.e2ee-proof-bundle.v1",
+    created_at: new Date().toISOString(),
+    app_origin: window.location.origin,
+    model_id: modelId,
+    canonical_model_id: canonicalModelId,
+    e2ee_version: response.e2ee?.version || encrypted.version || "1",
+    attestation: {
+      nonce: attestation.attestation_nonce,
+      model_public_key: attestation.model_public_key,
+      key_field: attestation.key_field,
+      canonical_model: attestation.canonical_model,
+      report_sha256: attestation.report_sha256,
+    },
+    client_attestation: clientAttestation,
+    encrypted_request: encrypted.body,
+    e2ee_request_headers: encrypted.headers,
+    encrypted_response: response.upstream_response,
+    e2ee_response_headers: response.e2ee?.headers || {},
+    signature: response.signature || null,
+    proof: response.proof || {},
+    billing: response.billing || {},
+    usage_event_id: response.usage_event_id,
+    notes: [
+      "This bundle intentionally excludes the plaintext prompt and plaintext answer.",
+      "Request and response payloads are encrypted data plus verifier metadata.",
+    ],
+  };
+}
+
+function downloadProofBundle() {
+  if (!state.lastProofBundle) return;
+  const requestId = state.lastProofBundle.encrypted_response?.id || state.lastProofBundle.usage_event_id || "proof";
+  const safeRequestId = String(requestId).replace(/[^a-zA-Z0-9_.-]+/g, "-").slice(0, 80) || "proof";
+  const blob = new Blob([`${JSON.stringify(state.lastProofBundle, null, 2)}\n`], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `trust-ai-proof-${safeRequestId}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function money(value) {
@@ -964,6 +1027,7 @@ function selectModel(modelId) {
   state.selectedModel = String(modelId || "");
   el.quoteModel.value = state.selectedModel;
   el.quoteResult.textContent = state.selectedModel ? t("selected") : t("select_model");
+  clearProofBundle();
 }
 
 function syncTokenEstimate() {
@@ -1012,6 +1076,7 @@ async function runEncryptedInference() {
 
   syncTokenEstimate();
   el.runButton.disabled = true;
+  clearProofBundle();
   el.proofResult.textContent = t("fetching_attestation");
   el.inferenceResult.textContent = t("encrypting");
 
@@ -1084,6 +1149,16 @@ async function runEncryptedInference() {
       `request sha256: ${response.proof?.request_sha256 || "n/a"}`,
       `response sha256: ${response.proof?.response_sha256 || "n/a"}`,
     ].join("\n");
+    state.lastProofBundle = makeProofBundle({
+      modelId: state.selectedModel,
+      canonicalModelId: canonicalModel,
+      attestation,
+      clientAttestation: clientCheck,
+      encrypted,
+      response,
+    });
+    el.proofDownload?.classList.remove("hidden");
+    if (el.proofDownload) el.proofDownload.disabled = false;
 
     await refreshAccount();
     renderAccount();
@@ -1135,6 +1210,7 @@ for (const control of [el.search, el.provider, el.input, el.output]) {
 
 el.quoteButton.addEventListener("click", quoteRequest);
 el.runButton.addEventListener("click", runEncryptedInference);
+el.proofDownload?.addEventListener("click", downloadProofBundle);
 el.quoteModel.addEventListener("change", () => selectModel(el.quoteModel.value));
 el.topupButton?.addEventListener("click", quoteTopup);
 el.balanceCard.addEventListener("click", toggleBalancePayments);
@@ -1154,7 +1230,10 @@ el.balanceCryptoCheck.addEventListener("click", () => checkCryptoTopup().catch((
   el.balanceCryptoResult.classList.remove("hidden");
 }));
 el.balanceTransactionsLink.addEventListener("click", showTransactions);
-el.promptText.addEventListener("input", syncTokenEstimate);
+el.promptText.addEventListener("input", () => {
+  syncTokenEstimate();
+  clearProofBundle();
+});
 el.googleLogin.addEventListener("click", () => signIn("google").catch(showAuthError));
 el.appleLogin.addEventListener("click", () => signIn("apple").catch(showAuthError));
 el.logoutButton.addEventListener("click", logout);

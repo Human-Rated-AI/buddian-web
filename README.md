@@ -52,5 +52,6 @@ For deterministic builds, the release script sorts archive entries, fixes owner/
 3. The client generates a secp256k1 key, encrypts the prompt locally with AES-GCM using the RedPill E2EE protocol, and sends only ciphertext to the Trust backend. The live deployment defaults to v1 compatibility mode; v2 AAD support remains in the source for providers that accept it.
 4. The backend verifies balance, forwards the ciphertext and E2EE headers to the confidential inference provider, and stores metadata only.
 5. The client decrypts the encrypted response locally.
+6. After a successful encrypted request, the client can download a JSON proof bundle containing encrypted request/response payloads, attestation metadata, response signature data, verifier status, request/response hashes, and billing metadata. The bundle intentionally excludes the plaintext prompt and plaintext answer.
 
 The plaintext prompt and model response are not intentionally stored in this client, local storage, the Trust backend, or the database.

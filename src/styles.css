@@ -795,6 +795,11 @@ textarea {
   background: #f7fbfa;
 }
 
+.proof-download {
+  width: 100%;
+  margin: 12px 0;
+}
+
 .inference-result {
   min-height: 120px;
 }
