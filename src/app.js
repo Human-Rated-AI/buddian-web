@@ -1039,6 +1039,7 @@ async function runEncryptedInference() {
       modelId: requestModel,
       modelPublicKey: attestation.model_public_key,
       maxCompletionTokens: Number(el.completionTokens.value || 512),
+      e2eeVersion: state.config?.e2ee?.default_version || "1",
     });
 
     el.proofResult.textContent = [
