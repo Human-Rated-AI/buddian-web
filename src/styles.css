@@ -1286,6 +1286,10 @@ body.app-mode .topbar {
   backdrop-filter: none;
 }
 
+body.app-mode .brand h1 {
+  font-size: 20px;
+}
+
 body.app-mode .top-link {
   display: none;
 }
