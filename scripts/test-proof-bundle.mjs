@@ -42,7 +42,12 @@ const bundle = {
   encrypted_response: encryptedResponse,
   encrypted_response_text: encryptedResponseText,
   e2ee_response_headers: { "X-E2EE-Applied": "true" },
-  signature: { text: "signed response" },
+  signature: {
+    text: `phala/test-model:${sha256Hex(JSON.stringify(encryptedRequest))}:${sha256Hex(encryptedResponseText)}`,
+    signature: "e56f97c4b564a4cde3af6e282556793b527141c41294441e2c397b7d9e446f5a043be56aa57c0f53d4b44eac335999d3bbda10ccb9659835c47315c7988072791b",
+    signing_address: "0x19E7E376E7C213B7E7e7e46cc70A5dD086DAff2A",
+    signing_algo: "ecdsa",
+  },
   proof: {
     request_sha256: sha256Hex(JSON.stringify(encryptedRequest)),
     response_sha256: sha256Hex(encryptedResponseText),
@@ -86,5 +91,9 @@ assert.equal(verifyProofBundle(tamperedResponseText).ok, false);
 const tamperedAttestation = structuredClone(bundle);
 tamperedAttestation.attestation.report.request_nonce = "ff".repeat(32);
 assert.equal(verifyProofBundle(tamperedAttestation).ok, false);
+
+const tamperedSignature = structuredClone(bundle);
+tamperedSignature.signature.signing_address = "0x0000000000000000000000000000000000000000";
+assert.equal(verifyProofBundle(tamperedSignature).ok, false);
 
 console.log("proof bundle verifier tests passed");

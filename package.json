@@ -11,6 +11,7 @@
     "verify:proof": "node scripts/verify-proof-bundle.mjs"
   },
   "dependencies": {
+    "@noble/hashes": "1.8.0",
     "@noble/secp256k1": "2.3.0"
   },
   "devDependencies": {

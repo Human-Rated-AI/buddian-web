@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { Signature } from "@noble/secp256k1";
+import { keccak_256 } from "@noble/hashes/sha3";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
@@ -15,6 +17,20 @@ const FORBIDDEN_PLAINTEXT_KEYS = new Set([
 
 function sha256Hex(value) {
   return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+function bytesToHex(bytes) {
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function hexToBytes(value) {
+  const hex = cleanHex(value);
+  if (!hex || hex.length % 2 !== 0 || !HEX_RE.test(hex)) throw new Error("Invalid hex");
+  const out = new Uint8Array(hex.length / 2);
+  for (let index = 0; index < out.length; index += 1) {
+    out[index] = Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16);
+  }
+  return out;
 }
 
 function cleanHex(value) {
@@ -60,6 +76,137 @@ function nestedHasNonce(value, nonce) {
     }
   }
   return false;
+}
+
+function parseSignatureText(text) {
+  const parts = String(text || "").split(":");
+  if (parts.length !== 2 && parts.length !== 3) {
+    throw new Error("Signature text must be request_hash:response_hash or model:request_hash:response_hash");
+  }
+  const [signedModel, requestHash, responseHash] = parts.length === 3 ? parts : [null, parts[0], parts[1]];
+  for (const [label, value] of [["request_hash", requestHash], ["response_hash", responseHash]]) {
+    const clean = cleanHex(value);
+    if (clean.length !== 64 || !HEX_RE.test(clean)) throw new Error(`Signature ${label} must be a sha256 hex digest`);
+  }
+  return {
+    signed_model: signedModel,
+    request_hash: cleanHex(requestHash),
+    response_hash: cleanHex(responseHash),
+    part_count: parts.length,
+  };
+}
+
+function orderedJsonHash(label, body, modelId = null) {
+  const preferred = [
+    "model",
+    "messages",
+    "max_tokens",
+    "max_completion_tokens",
+    "temperature",
+    "top_p",
+    "stream",
+    "tools",
+    "tool_choice",
+    "response_format",
+  ];
+  const copy = { ...(body || {}) };
+  if (modelId) copy.model = modelId;
+  const ordered = {};
+  for (const key of preferred) {
+    if (Object.prototype.hasOwnProperty.call(copy, key)) {
+      ordered[key] = copy[key];
+      delete copy[key];
+    }
+  }
+  for (const key of Object.keys(copy).sort()) {
+    ordered[key] = copy[key];
+  }
+  return { label, sha256: sha256Hex(JSON.stringify(ordered)) };
+}
+
+function uniqueHashCandidates(candidates) {
+  const seen = new Set();
+  return candidates.filter((candidate) => {
+    if (seen.has(candidate.sha256)) return false;
+    seen.add(candidate.sha256);
+    return true;
+  });
+}
+
+function requestHashCandidates(bundle, signedModel) {
+  const request = bundle.encrypted_request || {};
+  const candidates = [{ label: "exact_gateway_bytes", sha256: sha256Hex(JSON.stringify(request)) }];
+  const seenModels = new Set();
+  for (const [label, modelId] of [
+    ["signed_model_canonical_json", signedModel],
+    ["response_model_canonical_json", bundle.encrypted_response?.model],
+    ["canonical_model_canonical_json", bundle.canonical_model_id],
+    ["request_model_canonical_json", request.model],
+  ]) {
+    if (!modelId || seenModels.has(modelId)) continue;
+    seenModels.add(modelId);
+    candidates.push(orderedJsonHash(label, request, modelId));
+  }
+  return uniqueHashCandidates(candidates);
+}
+
+function stripUsageCost(response) {
+  const copy = response && typeof response === "object" ? structuredClone(response) : {};
+  if (copy.usage && typeof copy.usage === "object") delete copy.usage.cost;
+  return copy;
+}
+
+function responseHashCandidates(bundle) {
+  const response = bundle.encrypted_response || {};
+  const candidates = [
+    { label: "json_compact_from_parsed_response", sha256: sha256Hex(JSON.stringify(response)) },
+  ];
+  if (bundle.encrypted_response_text) {
+    candidates.unshift({ label: "exact_upstream_bytes", sha256: sha256Hex(bundle.encrypted_response_text) });
+  }
+  if (response.usage && typeof response.usage === "object" && Object.prototype.hasOwnProperty.call(response.usage, "cost")) {
+    candidates.push({
+      label: "gateway_usage_cost_stripped_json_compact",
+      sha256: sha256Hex(JSON.stringify(stripUsageCost(response))),
+    });
+  }
+  return uniqueHashCandidates(candidates);
+}
+
+function matchingHashLabels(expectedHash, candidates) {
+  const expected = cleanHex(expectedHash);
+  return candidates.filter((candidate) => candidate.sha256 === expected).map((candidate) => candidate.label);
+}
+
+function ethereumSignedMessageHash(text) {
+  const message = Buffer.from(String(text), "utf8");
+  const prefix = Buffer.from(`\x19Ethereum Signed Message:\n${message.length}`, "utf8");
+  return keccak_256(Buffer.concat([prefix, message]));
+}
+
+function normalizeRecoveryBit(value) {
+  const v = Number(value);
+  if (v >= 35) return (v - 35) % 2;
+  if (v >= 27) return v - 27;
+  return v;
+}
+
+function publicKeyToEthereumAddress(publicKey) {
+  const uncompressed = publicKey.toRawBytes(false);
+  const hash = keccak_256(uncompressed.slice(1));
+  return `0x${bytesToHex(hash.slice(-20))}`;
+}
+
+function recoverEthereumAddress(text, signatureHex) {
+  const signatureBytes = hexToBytes(signatureHex);
+  if (signatureBytes.length !== 65) throw new Error("Ethereum signature must be 65 bytes");
+  const recovery = normalizeRecoveryBit(signatureBytes[64]);
+  if (!Number.isInteger(recovery) || recovery < 0 || recovery > 3) {
+    throw new Error(`Invalid signature recovery id: ${signatureBytes[64]}`);
+  }
+  const signature = Signature.fromCompact(signatureBytes.slice(0, 64)).addRecoveryBit(recovery);
+  const publicKey = signature.recoverPublicKey(ethereumSignedMessageHash(text));
+  return publicKeyToEthereumAddress(publicKey);
 }
 
 function collectPlaintextKeyFindings(bundle) {
@@ -154,6 +301,46 @@ function checkEncryptedResponse(bundle, failures, warnings) {
   }
 }
 
+function checkSignature(bundle, failures, warnings) {
+  const signature = bundle.signature;
+  if (!signature || typeof signature !== "object") {
+    warnings.push("signature object is missing");
+    return;
+  }
+  const signatureText = String(signature.text || "");
+  const signatureHex = String(signature.signature || "");
+  const signingAddress = String(signature.signing_address || "");
+  let parsed;
+  try {
+    parsed = parseSignatureText(signatureText);
+  } catch (error) {
+    failures.push(`signature.text parse failed: ${error.message}`);
+    return;
+  }
+
+  const requestMatches = matchingHashLabels(parsed.request_hash, requestHashCandidates(bundle, parsed.signed_model));
+  if (!requestMatches.length) {
+    failures.push(`signature request hash does not match local request candidates: ${parsed.request_hash}`);
+  }
+  const responseMatches = matchingHashLabels(parsed.response_hash, responseHashCandidates(bundle));
+  if (!responseMatches.length) {
+    failures.push(`signature response hash does not match local response candidates: ${parsed.response_hash}`);
+  }
+
+  if (!signatureHex || !signingAddress) {
+    warnings.push("signature.signature or signature.signing_address is missing; cannot recover signer offline");
+    return;
+  }
+  try {
+    const recovered = recoverEthereumAddress(signatureText, signatureHex);
+    if (cleanHex(recovered) !== cleanHex(signingAddress)) {
+      failures.push(`signature signer mismatch: recovered ${recovered}, expected ${signingAddress}`);
+    }
+  } catch (error) {
+    failures.push(`signature signer recovery failed: ${error.message}`);
+  }
+}
+
 export function verifyProofBundle(bundle) {
   const failures = [];
   const warnings = [];
@@ -187,6 +374,7 @@ export function verifyProofBundle(bundle) {
 
   checkEncryptedRequest(bundle, failures);
   checkEncryptedResponse(bundle, failures, warnings);
+  checkSignature(bundle, failures, warnings);
 
   const plaintextKeyFindings = collectPlaintextKeyFindings(bundle);
   if (plaintextKeyFindings.length) {
