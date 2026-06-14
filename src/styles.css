@@ -70,6 +70,7 @@ p {
 h1 {
   font-size: 22px;
   font-weight: 760;
+  white-space: nowrap;
 }
 
 h2 {
