@@ -45,6 +45,17 @@ GitHub releases are published automatically for tags named `trust-web-v*`. The r
 
 For deterministic builds, the release script sorts archive entries, fixes owner/group metadata, and uses `SOURCE_DATE_EPOCH`. To reproduce a specific release exactly, check out the release tag, use the Node version in `package.json`, run `npm ci`, and then run `npm run release`.
 
+## Verify A Downloaded Proof Bundle
+
+After a successful encrypted request, the client can download a proof bundle. Verify it locally:
+
+```bash
+npm ci
+npm run verify:proof -- path/to/trust-ai-proof.json
+```
+
+The verifier checks that the request hash matches the encrypted request, request and response content are ciphertext-shaped, the bundle contains no obvious plaintext prompt/answer fields, and the backend proof checks report verified status. It does not contact Trust AI or the provider, so it does not refresh attestation; it validates the saved proof bundle.
+
 ## Encrypted Inference Flow
 
 1. The client logs in with Firebase and receives a backend session.

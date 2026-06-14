@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "release": "npm run build && scripts/build-release.sh"
+    "release": "npm run build && scripts/build-release.sh",
+    "test": "node scripts/test-proof-bundle.mjs",
+    "verify:proof": "node scripts/verify-proof-bundle.mjs"
   },
   "dependencies": {
     "@noble/secp256k1": "2.3.0"
