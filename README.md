@@ -66,3 +66,7 @@ The verifier checks that the request hash matches the encrypted request, the res
 6. After a successful encrypted request, the client can download a JSON proof bundle containing encrypted request/response payloads, attestation metadata, response signature data, verifier status, request/response hashes, and billing metadata. The bundle intentionally excludes the plaintext prompt and plaintext answer.
 
 The plaintext prompt and model response are not intentionally stored in this client, local storage, the Trust backend, or the database.
+
+## Encrypted Media Vault
+
+The client can encrypt a media file locally with AES-GCM before upload. The backend receives and stores only ciphertext plus metadata such as SHA-256, size, media type, and the IV. The AES key is kept in browser session storage so the user can download and decrypt the file locally during the same browser session; the key is never sent to Trust AI.

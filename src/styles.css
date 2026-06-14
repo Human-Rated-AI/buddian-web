@@ -707,6 +707,16 @@ textarea {
   margin-top: 18px;
 }
 
+.compact-head {
+  border-bottom: 0;
+  padding: 0;
+}
+
+.compact-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
 .count {
   color: var(--muted);
   font-weight: 700;
@@ -802,6 +812,20 @@ textarea {
 
 .inference-result {
   min-height: 120px;
+}
+
+.media-vault {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.media-vault input[type="file"] {
+  width: 100%;
+}
+
+.compact-result {
+  min-height: 44px;
 }
 
 .pay-link {

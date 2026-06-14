@@ -285,6 +285,33 @@
             <button id="quote-button" type="button" data-i18n="quote_request">Quote request</button>
             <output id="quote-result" class="result" data-i18n="select_model">Select a model.</output>
             <button id="run-button" type="button" data-i18n="run_encrypted">Run encrypted request</button>
+
+            <section class="media-vault" aria-label="Encrypted media vault">
+              <div class="section-head compact-head">
+                <div>
+                  <h3 data-i18n="encrypted_media">Encrypted media</h3>
+                  <p class="section-subtitle" data-i18n="encrypted_media_help">Files are encrypted in this browser before upload. Keep this tab open to decrypt downloads.</p>
+                </div>
+              </div>
+              <label>
+                <span data-i18n="media_file">Media file</span>
+                <input id="media-file" type="file">
+              </label>
+              <div class="split">
+                <label>
+                  <span data-i18n="media_type">Type</span>
+                  <select id="media-type">
+                    <option value="file" data-i18n="file">File</option>
+                    <option value="image" data-i18n="image">Image</option>
+                    <option value="audio" data-i18n="audio">Audio</option>
+                    <option value="video" data-i18n="video">Video</option>
+                  </select>
+                </label>
+                <button id="media-upload-button" type="button" data-i18n="encrypt_upload">Encrypt upload</button>
+              </div>
+              <output id="media-result" class="result compact-result" data-i18n="media_waiting">No encrypted media uploaded in this session.</output>
+              <div id="media-list" class="compact-list"></div>
+            </section>
           </aside>
 
           <section class="result-panel">

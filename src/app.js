@@ -1,6 +1,8 @@
 import {
   createEncryptedChatRequest,
   decryptChatResponse,
+  decryptMediaObject,
+  encryptMediaFile,
   estimateTextTokens,
   verifyAttestationForClient,
 } from "./e2ee.js";
@@ -25,6 +27,8 @@ const state = {
   selectedModel: "",
   currentCryptoPayment: null,
   lastProofBundle: null,
+  mediaKeys: new Map(),
+  mediaObjects: [],
   language: normalizeLanguage(localStorage.getItem("trust_language") || browserLanguage()),
   firebase: {
     modules: null,
@@ -92,6 +96,11 @@ const el = {
   proofDownload: $("#proof-download"),
   proofResult: $("#proof-result"),
   inferenceResult: $("#inference-result"),
+  mediaFile: $("#media-file"),
+  mediaType: $("#media-type"),
+  mediaUploadButton: $("#media-upload-button"),
+  mediaResult: $("#media-result"),
+  mediaList: $("#media-list"),
   topupAmount: $("#topup-amount"),
   topupButton: $("#topup-button"),
   topupResult: $("#topup-result"),
@@ -103,6 +112,23 @@ const el = {
 
 function t(key) {
   return I18N[state.language]?.[key] || I18N.en[key] || key;
+}
+
+function loadMediaKeys() {
+  try {
+    const raw = JSON.parse(sessionStorage.getItem("trust_media_keys") || "{}");
+    state.mediaKeys = new Map(Object.entries(raw && typeof raw === "object" ? raw : {}));
+  } catch {
+    state.mediaKeys = new Map();
+  }
+}
+
+function saveMediaKeys() {
+  try {
+    sessionStorage.setItem("trust_media_keys", JSON.stringify(Object.fromEntries(state.mediaKeys)));
+  } catch {
+    // If session storage is unavailable, decryption still works until the page reloads.
+  }
 }
 
 function setLanguage(value) {
@@ -549,6 +575,9 @@ function logout() {
   state.token = "";
   state.account = null;
   state.currentCryptoPayment = null;
+  state.mediaKeys.clear();
+  state.mediaObjects = [];
+  sessionStorage.removeItem("trust_media_keys");
   el.balancePaymentPanel.classList.add("hidden");
   el.balanceCard.setAttribute("aria-expanded", "false");
   state.firebase.modules?.authModule?.signOut(state.firebase.auth).catch(() => {});
@@ -945,7 +974,7 @@ async function refreshAccount() {
 }
 
 async function afterLogin() {
-  await Promise.allSettled([refreshAccount(), loadHealth(), loadModels(), loadInstallableModels()]);
+  await Promise.allSettled([refreshAccount(), loadHealth(), loadModels(), loadInstallableModels(), loadEncryptedMedia()]);
   renderRoute();
 }
 
@@ -1206,6 +1235,121 @@ async function loadInstallableModels() {
   }
 }
 
+function mediaTypeFromFile(file) {
+  const type = String(file?.type || "");
+  if (type.startsWith("image/")) return "image";
+  if (type.startsWith("audio/")) return "audio";
+  if (type.startsWith("video/")) return "video";
+  if (type.startsWith("text/")) return "text";
+  return "file";
+}
+
+function renderEncryptedMedia() {
+  if (!el.mediaList) return;
+  if (!state.mediaObjects.length) {
+    el.mediaList.innerHTML = `<div class="empty">${escapeHtml(t("no_encrypted_media"))}</div>`;
+    return;
+  }
+  el.mediaList.innerHTML = "";
+  for (const item of state.mediaObjects.slice(0, 20)) {
+    const hasKey = state.mediaKeys.has(String(item.id));
+    const row = document.createElement("div");
+    row.className = "compact-item";
+    row.innerHTML = `
+      <strong>${escapeHtml(item.filename || `media-${item.id}`)}</strong>
+      <span>${escapeHtml(item.media_type)} · ${escapeHtml(item.ciphertext_size_bytes)} bytes · ${escapeHtml(formatDateTime(item.created_at))}</span>
+      <button class="secondary-button media-download-button" type="button" data-media-id="${escapeHtml(item.id)}" ${hasKey ? "" : "disabled"}>${escapeHtml(hasKey ? t("download_decrypt") : t("missing_local_key"))}</button>
+    `;
+    row.querySelector("button")?.addEventListener("click", () => downloadEncryptedMedia(item.id).catch((error) => {
+      el.mediaResult.textContent = error.message;
+    }));
+    el.mediaList.appendChild(row);
+  }
+}
+
+async function loadEncryptedMedia() {
+  if (!state.token || !el.mediaList) return;
+  try {
+    const payload = await api("/media/encrypted");
+    state.mediaObjects = payload.data || [];
+    renderEncryptedMedia();
+  } catch (error) {
+    el.mediaList.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+  }
+}
+
+async function uploadEncryptedMedia() {
+  const file = el.mediaFile?.files?.[0];
+  if (!file) {
+    el.mediaResult.textContent = t("choose_media_file");
+    return;
+  }
+  const maxBytes = Number(state.config?.media?.max_upload_bytes || 0);
+  if (maxBytes && file.size > maxBytes) {
+    el.mediaResult.textContent = t("media_too_large").replace("{size}", String(maxBytes));
+    return;
+  }
+  el.mediaUploadButton.disabled = true;
+  el.mediaResult.textContent = t("encrypting_media");
+  try {
+    const encrypted = await encryptMediaFile(file);
+    const mediaType = el.mediaType.value || mediaTypeFromFile(file);
+    const response = await api("/media/encrypted", {
+      method: "POST",
+      body: {
+        filename: file.name,
+        media_type: mediaType,
+        content_type: file.type || "application/octet-stream",
+        ciphertext_b64: encrypted.ciphertext_b64,
+        ciphertext_sha256: encrypted.ciphertext_sha256,
+        plaintext_size_bytes: encrypted.plaintext_size_bytes,
+        encryption: encrypted.encryption,
+        metadata: {
+          source: "browser_media_vault",
+        },
+      },
+    });
+    const media = response.media;
+    state.mediaKeys.set(String(media.id), {
+      key_b64: encrypted.key_b64,
+      filename: file.name,
+      content_type: file.type || "application/octet-stream",
+    });
+    saveMediaKeys();
+    el.mediaResult.textContent = `${t("encrypted_media_uploaded")}: #${media.id}`;
+    await loadEncryptedMedia();
+  } catch (error) {
+    el.mediaResult.textContent = error.message;
+  } finally {
+    el.mediaUploadButton.disabled = false;
+  }
+}
+
+async function downloadEncryptedMedia(mediaId) {
+  const key = state.mediaKeys.get(String(mediaId));
+  if (!key) {
+    el.mediaResult.textContent = t("missing_local_key");
+    return;
+  }
+  const response = await api(`/media/encrypted/${encodeURIComponent(mediaId)}`);
+  const media = response.media;
+  const blob = await decryptMediaObject({
+    ciphertextB64: media.ciphertext_b64,
+    keyB64: key.key_b64,
+    ivB64: media.encryption?.iv_b64,
+    contentType: media.content_type || key.content_type,
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = media.filename || key.filename || `trust-media-${media.id}`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  el.mediaResult.textContent = t("decrypted_media_downloaded");
+}
+
 for (const control of [el.search, el.provider, el.input, el.output]) {
   control.addEventListener("input", () => loadModels().catch(console.error));
 }
@@ -1213,6 +1357,13 @@ for (const control of [el.search, el.provider, el.input, el.output]) {
 el.quoteButton.addEventListener("click", quoteRequest);
 el.runButton.addEventListener("click", runEncryptedInference);
 el.proofDownload?.addEventListener("click", downloadProofBundle);
+el.mediaUploadButton?.addEventListener("click", () => uploadEncryptedMedia().catch((error) => {
+  el.mediaResult.textContent = error.message;
+}));
+el.mediaFile?.addEventListener("change", () => {
+  const file = el.mediaFile.files?.[0];
+  if (file && el.mediaType) el.mediaType.value = mediaTypeFromFile(file);
+});
 el.quoteModel.addEventListener("change", () => selectModel(el.quoteModel.value));
 el.topupButton?.addEventListener("click", quoteTopup);
 el.balanceCard.addEventListener("click", toggleBalancePayments);
@@ -1262,6 +1413,7 @@ window.TrustApp = {
 
 (async function main() {
   replayAuthTrace();
+  loadMediaKeys();
   authTrace("Trust app loaded", {
     hasSessionToken: Boolean(state.token),
     pendingProvider: localStorage.getItem("trust_firebase_auth_provider") || "",

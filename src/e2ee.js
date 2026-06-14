@@ -18,6 +18,24 @@ export function hexToBytes(hex) {
   return out;
 }
 
+export function bytesToBase64(bytes) {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.slice(offset, offset + chunkSize));
+  }
+  return btoa(binary);
+}
+
+export function base64ToBytes(value) {
+  const binary = atob(String(value || ""));
+  const out = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    out[index] = binary.charCodeAt(index);
+  }
+  return out;
+}
+
 export function cleanHex(value) {
   return String(value || "")
     .trim()
@@ -76,6 +94,45 @@ async function deriveAesKey(sharedSecret) {
     false,
     ["encrypt", "decrypt"],
   );
+}
+
+async function sha256Bytes(bytes) {
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return bytesToHex(new Uint8Array(digest));
+}
+
+async function importAesKey(rawKey, usages) {
+  return crypto.subtle.importKey("raw", rawKey, { name: "AES-GCM" }, false, usages);
+}
+
+export async function encryptMediaFile(file) {
+  const plaintext = new Uint8Array(await file.arrayBuffer());
+  const rawKey = randomBytes(32);
+  const iv = randomBytes(12);
+  const key = await importAesKey(rawKey, ["encrypt"]);
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext),
+  );
+  return {
+    ciphertext_b64: bytesToBase64(ciphertext),
+    ciphertext_sha256: await sha256Bytes(ciphertext),
+    plaintext_size_bytes: plaintext.length,
+    key_b64: bytesToBase64(rawKey),
+    encryption: {
+      algorithm: "AES-GCM-256",
+      iv_b64: bytesToBase64(iv),
+      key_sha256: await sha256Bytes(rawKey),
+    },
+  };
+}
+
+export async function decryptMediaObject({ ciphertextB64, keyB64, ivB64, contentType = "application/octet-stream" }) {
+  const ciphertext = base64ToBytes(ciphertextB64);
+  const rawKey = base64ToBytes(keyB64);
+  const iv = base64ToBytes(ivB64);
+  const key = await importAesKey(rawKey, ["decrypt"]);
+  const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+  return new Blob([plaintext], { type: contentType });
 }
 
 async function encryptForModel(plaintext, modelPublicKeyHex, aad) {
