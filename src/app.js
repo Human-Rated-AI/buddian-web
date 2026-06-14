@@ -163,6 +163,7 @@ function makeProofBundle({
     encrypted_request: encrypted.body,
     e2ee_request_headers: encrypted.headers,
     encrypted_response: response.upstream_response,
+    encrypted_response_text: response.proof?.encrypted_response_text || "",
     e2ee_response_headers: response.e2ee?.headers || {},
     signature: response.signature || null,
     proof: response.proof || {},

@@ -116,8 +116,18 @@ function checkEncryptedResponse(bundle, failures, warnings) {
   }
   if (!bundle.proof?.response_sha256) {
     warnings.push("proof.response_sha256 is missing");
+  } else if (bundle.encrypted_response_text) {
+    const responseHash = sha256Hex(bundle.encrypted_response_text);
+    if (responseHash !== bundle.proof.response_sha256) {
+      failures.push(`encrypted_response_text hash mismatch: expected ${bundle.proof.response_sha256}, got ${responseHash}`);
+    }
+    try {
+      JSON.parse(bundle.encrypted_response_text);
+    } catch {
+      failures.push("encrypted_response_text is not valid JSON");
+    }
   } else {
-    warnings.push("response_sha256 is server-computed over exact upstream bytes and is not recomputed from parsed JSON");
+    warnings.push("response_sha256 is server-computed over exact upstream bytes; encrypted_response_text is missing");
   }
 }
 

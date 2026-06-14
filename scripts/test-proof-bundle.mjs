@@ -12,6 +12,11 @@ const encryptedRequest = {
   model: "phala/test-model",
   messages: [{ role: "user", content: encryptedHex }],
 };
+const encryptedResponse = {
+  id: "chatcmpl-test",
+  choices: [{ message: { content: encryptedHex } }],
+};
+const encryptedResponseText = JSON.stringify(encryptedResponse);
 
 const bundle = {
   schema: "trust-ai.e2ee-proof-bundle.v1",
@@ -30,15 +35,13 @@ const bundle = {
     "X-Client-Pub-Key": "02" + "22".repeat(32),
     "X-Model-Pub-Key": "02" + "11".repeat(32),
   },
-  encrypted_response: {
-    id: "chatcmpl-test",
-    choices: [{ message: { content: encryptedHex } }],
-  },
+  encrypted_response: encryptedResponse,
+  encrypted_response_text: encryptedResponseText,
   e2ee_response_headers: { "X-E2EE-Applied": "true" },
   signature: { text: "signed response" },
   proof: {
     request_sha256: sha256Hex(JSON.stringify(encryptedRequest)),
-    response_sha256: "33".repeat(32),
+    response_sha256: sha256Hex(encryptedResponseText),
     verification: {
       verified: true,
       status: "verified",
@@ -65,5 +68,9 @@ assert.equal(verifyProofBundle(tamperedRequest).ok, false);
 const plaintextKey = structuredClone(bundle);
 plaintextKey.prompt = "do not ship this";
 assert.equal(verifyProofBundle(plaintextKey).ok, false);
+
+const tamperedResponseText = structuredClone(bundle);
+tamperedResponseText.encrypted_response_text = JSON.stringify({ id: "changed" });
+assert.equal(verifyProofBundle(tamperedResponseText).ok, false);
 
 console.log("proof bundle verifier tests passed");
