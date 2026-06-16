@@ -16,12 +16,12 @@ const apiBase = (() => {
   if (host.startsWith("api.")) return window.location.origin;
   return `${window.location.protocol}//api.${host}`;
 })();
-const AUTH_LOG_KEY = "trust_auth_trace";
+const AUTH_LOG_KEY = "buddian_auth_trace";
 const ADMIN_BUNDLE_VERSION = "20260611-admin-credit";
 
 const state = {
   config: null,
-  token: localStorage.getItem("trust_session") || "",
+  token: localStorage.getItem("buddian_session") || "",
   account: null,
   models: [],
   selectedModel: "",
@@ -29,7 +29,7 @@ const state = {
   lastProofBundle: null,
   mediaKeys: new Map(),
   mediaObjects: [],
-  language: normalizeLanguage(localStorage.getItem("trust_language") || browserLanguage()),
+  language: normalizeLanguage(localStorage.getItem("buddian_language") || browserLanguage()),
   firebase: {
     modules: null,
     app: null,
@@ -116,7 +116,7 @@ function t(key) {
 
 function loadMediaKeys() {
   try {
-    const raw = JSON.parse(sessionStorage.getItem("trust_media_keys") || "{}");
+    const raw = JSON.parse(sessionStorage.getItem("buddian_media_keys") || "{}");
     state.mediaKeys = new Map(Object.entries(raw && typeof raw === "object" ? raw : {}));
   } catch {
     state.mediaKeys = new Map();
@@ -125,7 +125,7 @@ function loadMediaKeys() {
 
 function saveMediaKeys() {
   try {
-    sessionStorage.setItem("trust_media_keys", JSON.stringify(Object.fromEntries(state.mediaKeys)));
+    sessionStorage.setItem("buddian_media_keys", JSON.stringify(Object.fromEntries(state.mediaKeys)));
   } catch {
     // If session storage is unavailable, decryption still works until the page reloads.
   }
@@ -133,7 +133,7 @@ function saveMediaKeys() {
 
 function setLanguage(value) {
   state.language = normalizeLanguage(value);
-  localStorage.setItem("trust_language", state.language);
+  localStorage.setItem("buddian_language", state.language);
   applyTranslations();
   renderRoute();
 }
@@ -172,7 +172,7 @@ function makeProofBundle({
   response,
 }) {
   return {
-    schema: "trust-ai.e2ee-proof-bundle.v1",
+    schema: "buddian.e2ee-proof-bundle.v1",
     created_at: new Date().toISOString(),
     app_origin: window.location.origin,
     model_id: modelId,
@@ -213,7 +213,7 @@ function downloadProofBundle() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `trust-ai-proof-${safeRequestId}.json`;
+  link.download = `buddian-proof-${safeRequestId}.json`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -293,7 +293,7 @@ function authTrace(context, details = {}, level = "info") {
     // Ignore storage errors; console output below is still useful.
   }
   const method = level === "error" ? "error" : level === "warn" ? "warn" : "info";
-  console[method](`[Trust auth] ${context}`, entry);
+  console[method](`[Buddian auth] ${context}`, entry);
 }
 
 function replayAuthTrace() {
@@ -305,8 +305,8 @@ function replayAuthTrace() {
     entries = [];
   }
   if (!entries.length) return;
-  console.groupCollapsed(`[Trust auth] previous auth trace (${entries.length})`);
-  entries.forEach((entry) => console.info(`[Trust auth] ${entry.context}`, entry));
+  console.groupCollapsed(`[Buddian auth] previous auth trace (${entries.length})`);
+  entries.forEach((entry) => console.info(`[Buddian auth] ${entry.context}`, entry));
   console.groupEnd();
 }
 
@@ -403,29 +403,29 @@ async function initFirebase() {
       }
     });
     authTrace("Checking Firebase redirect result", {
-      pendingProvider: localStorage.getItem("trust_firebase_auth_provider") || "",
+      pendingProvider: localStorage.getItem("buddian_firebase_auth_provider") || "",
     });
     const redirectResult = await authModule.getRedirectResult(state.firebase.auth).catch((error) => {
       logAuthError("Firebase redirect result failed", error, {
-        provider: localStorage.getItem("trust_firebase_auth_provider") || "",
+        provider: localStorage.getItem("buddian_firebase_auth_provider") || "",
       });
       showAuthError(error);
       return null;
     });
     if (redirectResult?.user) {
-      localStorage.removeItem("trust_firebase_auth_provider");
+      localStorage.removeItem("buddian_firebase_auth_provider");
       await completeFirebaseAuthOnce(redirectResult.user, "Backend session exchange failed after redirect", {
         providerId: redirectResult.providerId || "",
       });
     }
-    if (!redirectResult?.user && localStorage.getItem("trust_firebase_auth_provider")) {
+    if (!redirectResult?.user && localStorage.getItem("buddian_firebase_auth_provider")) {
       authTrace("No Firebase redirect result found after return", {
-        pendingProvider: localStorage.getItem("trust_firebase_auth_provider") || "",
+        pendingProvider: localStorage.getItem("buddian_firebase_auth_provider") || "",
         hasCurrentUser: Boolean(state.firebase.auth.currentUser),
         currentUid: state.firebase.auth.currentUser?.uid || "",
         currentEmail: state.firebase.auth.currentUser?.email || "",
       }, "warn");
-      if (!state.firebase.auth.currentUser) localStorage.removeItem("trust_firebase_auth_provider");
+      if (!state.firebase.auth.currentUser) localStorage.removeItem("buddian_firebase_auth_provider");
     }
     if (firebaseConfig().measurementId) {
       try {
@@ -493,8 +493,8 @@ async function completeFirebaseAuth(firebaseUser) {
   }
   state.token = data.session_token;
   state.account = data.account;
-  localStorage.setItem("trust_session", state.token);
-  localStorage.removeItem("trust_firebase_auth_provider");
+  localStorage.setItem("buddian_session", state.token);
+  localStorage.removeItem("buddian_firebase_auth_provider");
   authTrace("Backend session exchange succeeded", {
     accountEmail: state.account?.user?.email || "",
     accountName: state.account?.user?.display_name || "",
@@ -536,7 +536,7 @@ async function signIn(providerName) {
     throw error;
   }
 
-  localStorage.setItem("trust_firebase_auth_provider", providerName);
+  localStorage.setItem("buddian_firebase_auth_provider", providerName);
   authTrace("Opening Firebase popup", { provider: providerName });
   let result;
   try {
@@ -570,14 +570,14 @@ async function signIn(providerName) {
 }
 
 function logout() {
-  localStorage.removeItem("trust_session");
-  localStorage.removeItem("trust_firebase_auth_provider");
+  localStorage.removeItem("buddian_session");
+  localStorage.removeItem("buddian_firebase_auth_provider");
   state.token = "";
   state.account = null;
   state.currentCryptoPayment = null;
   state.mediaKeys.clear();
   state.mediaObjects = [];
-  sessionStorage.removeItem("trust_media_keys");
+  sessionStorage.removeItem("buddian_media_keys");
   el.balancePaymentPanel.classList.add("hidden");
   el.balanceCard.setAttribute("aria-expanded", "false");
   state.firebase.modules?.authModule?.signOut(state.firebase.auth).catch(() => {});
@@ -606,7 +606,7 @@ function toggleAuthMenu() {
   if (state.token && state.account) return;
   if (!firebaseConfigured()) {
     el.authNote.textContent = t("signin_unconfigured");
-    console.error("[Trust auth] Firebase sign-in requested but Firebase is not configured");
+    console.error("[Buddian auth] Firebase sign-in requested but Firebase is not configured");
     return;
   }
   const hidden = el.authMenu.classList.toggle("hidden");
@@ -671,8 +671,8 @@ function renderRoute() {
     el.landing.classList.add("hidden");
     el.appShell.classList.add("hidden");
     el.extensionShell.classList.remove("hidden");
-    if (window.TrustAdmin?.render) {
-      window.TrustAdmin.render({
+    if (window.BuddianAdmin?.render) {
+      window.BuddianAdmin.render({
         root: el.extensionShell,
         api,
         state,
@@ -778,7 +778,7 @@ function toggleBalancePayments(event) {
   const opening = el.balancePaymentPanel.classList.contains("hidden");
   el.balancePaymentPanel.classList.toggle("hidden", !opening);
   el.balanceCard.setAttribute("aria-expanded", opening ? "true" : "false");
-  console.info("[Trust UI] Balance panel toggled", { open: opening });
+  console.info("[Buddian UI] Balance panel toggled", { open: opening });
   if (opening) {
     el.balancePaymentPanel.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
@@ -966,7 +966,7 @@ async function refreshAccount() {
     state.account = await api("/web/me");
     return true;
   } catch {
-    localStorage.removeItem("trust_session");
+    localStorage.removeItem("buddian_session");
     state.token = "";
     state.account = null;
     return false;
@@ -1342,7 +1342,7 @@ async function downloadEncryptedMedia(mediaId) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = media.filename || key.filename || `trust-media-${media.id}`;
+  link.download = media.filename || key.filename || `buddian-media-${media.id}`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -1405,7 +1405,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeAuthMenu();
 });
 
-window.TrustApp = {
+window.BuddianApp = {
   api,
   state,
   helpers: { $, $$, escapeHtml, money, formatDateTime, t, applyTranslations },
@@ -1414,9 +1414,9 @@ window.TrustApp = {
 (async function main() {
   replayAuthTrace();
   loadMediaKeys();
-  authTrace("Trust app loaded", {
+  authTrace("Buddian app loaded", {
     hasSessionToken: Boolean(state.token),
-    pendingProvider: localStorage.getItem("trust_firebase_auth_provider") || "",
+    pendingProvider: localStorage.getItem("buddian_firebase_auth_provider") || "",
   });
   applyTranslations();
   await loadConfig().catch(showAuthError);

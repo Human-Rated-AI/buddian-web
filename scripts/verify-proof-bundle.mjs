@@ -348,7 +348,7 @@ export function verifyProofBundle(bundle) {
   if (!bundle || typeof bundle !== "object" || Array.isArray(bundle)) {
     return { ok: false, failures: ["bundle is not a JSON object"], warnings };
   }
-  if (bundle.schema !== "trust-ai.e2ee-proof-bundle.v1") {
+  if (bundle.schema !== "buddian.e2ee-proof-bundle.v1") {
     failures.push(`unexpected schema: ${bundle.schema || "missing"}`);
   }
   if (!bundle.model_id) failures.push("model_id is missing");
@@ -417,7 +417,7 @@ export function verifyProofBundle(bundle) {
 async function main() {
   const file = process.argv[2];
   if (!file || file === "-h" || file === "--help") {
-    console.log("Usage: node scripts/verify-proof-bundle.mjs path/to/trust-ai-proof.json");
+    console.log("Usage: node scripts/verify-proof-bundle.mjs path/to/buddian-proof.json");
     process.exit(file ? 0 : 2);
   }
   const bundle = JSON.parse(await readFile(file, "utf8"));

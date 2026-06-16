@@ -1,8 +1,8 @@
 {
-  "name": "@human-rated-ai/trust-web",
+  "name": "@human-rated-ai/buddian-web",
   "version": "0.1.0",
   "private": false,
-  "description": "Open source Trust AI web client for verifiable private AI sessions.",
+  "description": "Open source Buddian web client for verifiable private AI sessions.",
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",

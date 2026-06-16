@@ -2,7 +2,7 @@ export const SUPPORTED_LANGUAGES = new Set(["en", "es", "ru"]);
 
 export const I18N = {
   en: {
-    app_name: "Trust AI",
+    app_name: "Buddian",
     subtitle: "Private AI requests on secure GPUs",
     nav_overview: "Overview",
     nav_generate: "Generate",
@@ -16,7 +16,7 @@ export const I18N = {
     landing_eyebrow: "Confidential AI",
     landing_title: "AI is powerful. Your private data is the price unless you protect it.",
     landing_copy:
-      "Prompts often contain client names, contracts, source code, medical details, financial plans, unreleased products, and private files. Trust AI encrypts them on your device, sends only ciphertext through our server, and decrypts the answer only in your browser.",
+      "Prompts often contain client names, contracts, source code, medical details, financial plans, unreleased products, and private files. Buddian encrypts them on your device, sends only ciphertext through our server, and decrypts the answer only in your browser.",
     hero_point_1: "No plaintext prompts in our gateway",
     hero_point_2: "Hardware-protected GPU execution",
     hero_point_3: "Open client build with checksum verification",
@@ -60,7 +60,7 @@ export const I18N = {
     proof_open_title: "Open client path",
     proof_open_copy:
       "The downloadable client is built from public source so users can compile it, calculate its checksum, and compare it with the published release.",
-    enclave_eyebrow: "Trust, but verify",
+    enclave_eyebrow: "Verify the shield",
     enclave_title: "Before secrets move, the client checks the secure environment.",
     enclave_copy:
       "The client fetches fresh attestation evidence, checks the model encryption key, encrypts locally, and shows proof hashes after the response. You can use the public client source to build the same user client and compare checksums.",
@@ -146,7 +146,7 @@ export const I18N = {
     present: "present",
     missing: "missing",
     top_up: "Top Up",
-    top_up_help: "Choose PayPal, Zelle, or crypto. Use your Trust account email in payment notes when possible.",
+    top_up_help: "Choose PayPal, Zelle, or crypto. Use your Buddian account email in payment notes when possible.",
     amount_usd: "Amount USD",
     minimum_payment: "Min {amount} payment",
     quote_topup: "Quote top-up",
@@ -159,7 +159,7 @@ export const I18N = {
     zelle_payment: "Zelle payment",
     zelle_qr_alt: "Zelle QR code",
     zelle_recipient: "Recipient",
-    zelle_manual_credit: "Use your Trust account email in the Zelle memo. Balance is credited after confirmation.",
+    zelle_manual_credit: "Use your Buddian account email in the Zelle memo. Balance is credited after confirmation.",
     open_crypto_checkout: "Open crypto checkout",
     crypto_checkout_created: "Crypto checkout created. Open it to choose a coin and pay.",
     copy_crypto_payment: "Copy payment details",
@@ -199,7 +199,7 @@ export const I18N = {
     balance_refreshed: "Balance refreshed.",
   },
   es: {
-    app_name: "Trust AI",
+    app_name: "Buddian",
     subtitle: "Solicitudes privadas de IA en GPUs seguras",
     nav_overview: "Inicio",
     nav_generate: "Generar",
@@ -213,7 +213,7 @@ export const I18N = {
     landing_eyebrow: "IA confidencial",
     landing_title: "La IA es poderosa. Tus datos privados son el precio si no los proteges.",
     landing_copy:
-      "Los prompts suelen contener nombres de clientes, contratos, codigo fuente, datos medicos, planes financieros, productos no anunciados y archivos privados. Trust AI los cifra en tu dispositivo, envia solo texto cifrado por nuestro servidor y descifra la respuesta solo en tu navegador.",
+      "Los prompts suelen contener nombres de clientes, contratos, codigo fuente, datos medicos, planes financieros, productos no anunciados y archivos privados. Buddian los cifra en tu dispositivo, envia solo texto cifrado por nuestro servidor y descifra la respuesta solo en tu navegador.",
     hero_point_1: "Sin prompts en claro en nuestro gateway",
     hero_point_2: "Ejecucion en GPU protegida por hardware",
     hero_point_3: "Cliente abierto con verificacion de checksum",
@@ -257,7 +257,7 @@ export const I18N = {
     proof_open_title: "Cliente abierto",
     proof_open_copy:
       "El cliente descargable se construye desde codigo publico para que los usuarios puedan compilarlo, calcular su checksum y compararlo con la version publicada.",
-    enclave_eyebrow: "Confia, pero verifica",
+    enclave_eyebrow: "Verifica el escudo",
     enclave_title: "Antes de mover secretos, el cliente comprueba el entorno seguro.",
     enclave_copy:
       "El cliente obtiene evidencia de atestacion reciente, comprueba la clave de cifrado del modelo, cifra localmente y muestra hashes de prueba despues de la respuesta. Puedes usar el codigo publico del cliente para construir el mismo cliente de usuario y comparar checksums.",
@@ -343,7 +343,7 @@ export const I18N = {
     present: "presente",
     missing: "ausente",
     top_up: "Recargar",
-    top_up_help: "Elige PayPal, Zelle o crypto. Usa tu email de Trust en las notas de pago cuando sea posible.",
+    top_up_help: "Elige PayPal, Zelle o crypto. Usa tu email de Buddian en las notas de pago cuando sea posible.",
     amount_usd: "Importe USD",
     minimum_payment: "Pago minimo {amount}",
     quote_topup: "Cotizar recarga",
@@ -356,7 +356,7 @@ export const I18N = {
     zelle_payment: "Pago con Zelle",
     zelle_qr_alt: "Codigo QR de Zelle",
     zelle_recipient: "Destinatario",
-    zelle_manual_credit: "Usa tu email de Trust en la nota de Zelle. El saldo se acredita despues de la confirmacion.",
+    zelle_manual_credit: "Usa tu email de Buddian en la nota de Zelle. El saldo se acredita despues de la confirmacion.",
     open_crypto_checkout: "Abrir pago crypto",
     crypto_checkout_created: "Pago crypto creado. Abre el enlace para elegir moneda y pagar.",
     copy_crypto_payment: "Copiar detalles de pago",
@@ -396,7 +396,7 @@ export const I18N = {
     balance_refreshed: "Saldo actualizado.",
   },
   ru: {
-    app_name: "Trust AI",
+    app_name: "Buddian",
     subtitle: "Приватные AI-запросы на защищенных GPU",
     nav_overview: "Обзор",
     nav_generate: "Запуск",
@@ -410,7 +410,7 @@ export const I18N = {
     landing_eyebrow: "Конфиденциальный AI",
     landing_title: "AI силен. Если не защититься, ценой становятся ваши приватные данные.",
     landing_copy:
-      "Промпты часто содержат имена клиентов, договоры, исходный код, медицинские детали, финансовые планы, еще не выпущенные продукты и приватные файлы. Trust AI шифрует их на вашем устройстве, отправляет через наш сервер только ciphertext и расшифровывает ответ только в вашем браузере.",
+      "Промпты часто содержат имена клиентов, договоры, исходный код, медицинские детали, финансовые планы, еще не выпущенные продукты и приватные файлы. Buddian шифрует их на вашем устройстве, отправляет через наш сервер только ciphertext и расшифровывает ответ только в вашем браузере.",
     hero_point_1: "Нет открытых промптов в нашем gateway",
     hero_point_2: "Выполнение на аппаратно защищенных GPU",
     hero_point_3: "Открытый клиент с проверкой checksum",
@@ -454,7 +454,7 @@ export const I18N = {
     proof_open_title: "Открытый клиент",
     proof_open_copy:
       "Скачиваемый клиент собирается из публичного кода, чтобы пользователи могли собрать его, посчитать checksum и сравнить с опубликованным релизом.",
-    enclave_eyebrow: "Доверяй, но проверяй",
+    enclave_eyebrow: "Проверьте защиту",
     enclave_title: "До передачи секретов клиент проверяет безопасную среду.",
     enclave_copy:
       "Клиент получает свежую аттестацию, проверяет ключ шифрования модели, шифрует локально и показывает proof-хэши после ответа. Вы можете использовать публичный исходный код клиента, собрать тот же клиент и сравнить checksum.",
@@ -540,7 +540,7 @@ export const I18N = {
     present: "есть",
     missing: "нет",
     top_up: "Пополнить",
-    top_up_help: "Выберите PayPal, Zelle или crypto. По возможности указывайте email Trust-аккаунта в заметке к платежу.",
+    top_up_help: "Выберите PayPal, Zelle или crypto. По возможности указывайте email Buddian-аккаунта в заметке к платежу.",
     amount_usd: "Сумма USD",
     minimum_payment: "Минимум {amount}",
     quote_topup: "Оценить пополнение",
@@ -553,7 +553,7 @@ export const I18N = {
     zelle_payment: "Оплата через Zelle",
     zelle_qr_alt: "QR-код Zelle",
     zelle_recipient: "Получатель",
-    zelle_manual_credit: "Укажите email вашего Trust-аккаунта в заметке Zelle. Баланс пополняется после подтверждения.",
+    zelle_manual_credit: "Укажите email вашего Buddian-аккаунта в заметке Zelle. Баланс пополняется после подтверждения.",
     open_crypto_checkout: "Открыть crypto-оплату",
     crypto_checkout_created: "Crypto-оплата создана. Откройте ссылку, выберите монету и оплатите.",
     copy_crypto_payment: "Скопировать детали оплаты",

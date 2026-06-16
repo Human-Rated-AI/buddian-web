@@ -19,9 +19,9 @@ const encryptedResponse = {
 const encryptedResponseText = JSON.stringify(encryptedResponse);
 
 const bundle = {
-  schema: "trust-ai.e2ee-proof-bundle.v1",
+  schema: "buddian.e2ee-proof-bundle.v1",
   created_at: "2026-06-14T04:30:00.000Z",
-  app_origin: "https://trust.hurated.com",
+  app_origin: "https://buddian.com",
   model_id: "phala/test-model",
   canonical_model_id: "phala/test-model",
   e2ee_version: "1",

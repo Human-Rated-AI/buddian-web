@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "trust-web-v*"
+      - "buddian-web-v*"
 
 permissions:
   contents: write
@@ -32,8 +32,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            release/trust-web.tar.gz \
-            release/trust-web.sha256 \
-            release/trust-web.release.json \
+            release/buddian-web.tar.gz \
+            release/buddian-web.sha256 \
+            release/buddian-web.release.json \
             --title "$GITHUB_REF_NAME" \
-            --notes "Trust Web release for commit $GITHUB_SHA. Verify with: sha256sum -c trust-web.sha256"
+            --notes "Buddian Web release for commit $GITHUB_SHA. Verify with: sha256sum -c buddian-web.sha256"
