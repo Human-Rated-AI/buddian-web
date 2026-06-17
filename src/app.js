@@ -27,6 +27,10 @@ const state = {
   selectedModel: "",
   currentCryptoPayment: null,
   lastProofBundle: null,
+  proxyAuthorization: null,
+  proxyApiKey: null,
+  proxyApiKeys: [],
+  proxyApiKeysLoaded: false,
   mediaKeys: new Map(),
   mediaObjects: [],
   language: normalizeLanguage(localStorage.getItem("buddian_language") || browserLanguage()),
@@ -646,28 +650,41 @@ function isAdminRoute() {
   return path === "/admin" || path.startsWith("/admin/");
 }
 
+function isProxyRoute() {
+  const path = window.location.pathname.replace(/\/+$/, "");
+  return path === "/proxy" || path === "/proxy/authorize";
+}
+
 function renderRoute() {
   const adminRoute = isAdminRoute();
+  const proxyRoute = isProxyRoute();
   const loggedIn = Boolean(state.token && state.account);
-  document.body.classList.toggle("app-mode", loggedIn && !adminRoute);
+  document.body.classList.toggle("app-mode", loggedIn && !adminRoute && !proxyRoute);
   document.body.classList.toggle("admin-mode", adminRoute);
 
   renderAuthHeader(loggedIn);
 
   el.landing.classList.toggle("hidden", loggedIn);
-  el.appShell.classList.toggle("hidden", !loggedIn || adminRoute);
+  el.appShell.classList.toggle("hidden", !loggedIn || adminRoute || proxyRoute);
   el.extensionShell.classList.add("hidden");
-  el.appNav?.classList.toggle("hidden", !loggedIn || adminRoute);
+  el.appNav?.classList.toggle("hidden", !loggedIn || adminRoute || proxyRoute);
 
   if (!loggedIn) {
-    el.authNote.textContent = firebaseConfigured() ? t("signin_required") : t("signin_unconfigured");
+    el.authNote.textContent = firebaseConfigured()
+      ? (proxyRoute ? t("proxy_signin_required") : t("signin_required"))
+      : t("signin_unconfigured");
     el.googleLogin.disabled = !firebaseConfigured();
     el.appleLogin.disabled = !firebaseConfigured();
     return;
   }
 
   renderAccount();
-  if (adminRoute) {
+  if (proxyRoute) {
+    el.landing.classList.add("hidden");
+    el.appShell.classList.add("hidden");
+    el.extensionShell.classList.remove("hidden");
+    renderProxyAuthorization();
+  } else if (adminRoute) {
     el.landing.classList.add("hidden");
     el.appShell.classList.add("hidden");
     el.extensionShell.classList.remove("hidden");
@@ -689,6 +706,177 @@ function renderRoute() {
         });
     }
   }
+}
+
+function proxyRouteParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    deviceCode: params.get("device_code") || "",
+    userCode: params.get("user_code") || "",
+    name: params.get("name") || "Buddian Proxy",
+  };
+}
+
+function proxyAuthStatusMarkup() {
+  if (!state.proxyAuthorization) return "";
+  const status = state.proxyAuthorization.status || "";
+  const detail = state.proxyAuthorization.error || state.proxyAuthorization.name || "";
+  return `
+    <div class="proxy-status">
+      <strong>${escapeHtml(status)}</strong>
+      ${detail ? `<span>${escapeHtml(detail)}</span>` : ""}
+    </div>
+  `;
+}
+
+function manualProxyKeyMarkup() {
+  if (!state.proxyApiKey) return "";
+  return `
+    <div class="proxy-key-result">
+      <label>${escapeHtml(t("proxy_api_key_once"))}</label>
+      <code>${escapeHtml(state.proxyApiKey)}</code>
+      <button type="button" class="secondary-button" id="proxy-copy-key">${escapeHtml(t("copy_crypto_payment"))}</button>
+    </div>
+  `;
+}
+
+function renderProxyAuthorization() {
+  const { deviceCode, userCode, name } = proxyRouteParams();
+  const account = state.account?.user || {};
+  const safeName = name || "Buddian Proxy";
+  const deviceCard = deviceCode
+    ? `
+      <article class="proxy-card">
+        <span class="eyebrow">${escapeHtml(t("proxy_device_login"))}</span>
+        <h2>${escapeHtml(t("proxy_authorize_title"))}</h2>
+        <p>${escapeHtml(t("proxy_authorize_copy"))}</p>
+        <dl class="proxy-facts">
+          <div><dt>${escapeHtml(t("account"))}</dt><dd>${escapeHtml(account.email || account.display_name || "")}</dd></div>
+          <div><dt>${escapeHtml(t("proxy_name"))}</dt><dd>${escapeHtml(safeName)}</dd></div>
+          <div><dt>${escapeHtml(t("proxy_user_code"))}</dt><dd><code>${escapeHtml(userCode || "")}</code></dd></div>
+        </dl>
+        <button type="button" id="proxy-authorize-button">${escapeHtml(t("proxy_authorize_button"))}</button>
+        ${proxyAuthStatusMarkup()}
+      </article>
+    `
+    : `
+      <article class="proxy-card">
+        <span class="eyebrow">${escapeHtml(t("proxy_manual_key"))}</span>
+        <h2>${escapeHtml(t("proxy_manual_title"))}</h2>
+        <p>${escapeHtml(t("proxy_manual_copy"))}</p>
+        <label for="proxy-key-name">${escapeHtml(t("proxy_name"))}</label>
+        <input id="proxy-key-name" type="text" value="Buddian Proxy" autocomplete="off">
+        <button type="button" id="proxy-create-key">${escapeHtml(t("proxy_create_key"))}</button>
+        ${manualProxyKeyMarkup()}
+        ${proxyAuthStatusMarkup()}
+      </article>
+    `;
+
+  const keys = state.proxyApiKeys || [];
+  const keyList = keys.length
+    ? keys.map((key) => `
+        <div class="compact-item">
+          <strong>${escapeHtml(key.name || key.key_prefix)}</strong>
+          <span>${escapeHtml(key.key_prefix)} · ${escapeHtml(key.revoked_at ? t("proxy_key_revoked") : t("available"))} · ${escapeHtml(formatDateTime(key.created_at))}</span>
+          ${key.revoked_at ? "" : `<button type="button" class="secondary-button proxy-revoke-key" data-key-id="${escapeHtml(key.id)}">${escapeHtml(t("proxy_revoke_key"))}</button>`}
+        </div>
+      `).join("")
+    : `<div class="empty">${escapeHtml(t("proxy_no_keys"))}</div>`;
+
+  el.extensionShell.innerHTML = `
+    <div class="proxy-shell">
+      ${deviceCard}
+      <article class="proxy-card">
+        <span class="eyebrow">${escapeHtml(t("proxy_codex"))}</span>
+        <h2>${escapeHtml(t("proxy_use_title"))}</h2>
+        <p>${escapeHtml(t("proxy_use_copy"))}</p>
+        <pre><code>buddian-proxy serve --port 8787</code></pre>
+        <pre><code>base_url = "http://127.0.0.1:8787/v1"</code></pre>
+      </article>
+      <article class="proxy-card">
+        <span class="eyebrow">${escapeHtml(t("proxy_keys"))}</span>
+        <h2>${escapeHtml(t("proxy_keys_title"))}</h2>
+        <div class="compact-list">${keyList}</div>
+      </article>
+    </div>
+  `;
+
+  el.extensionShell.querySelector("#proxy-authorize-button")?.addEventListener("click", authorizeProxyDevice);
+  el.extensionShell.querySelector("#proxy-create-key")?.addEventListener("click", createManualProxyKey);
+  el.extensionShell.querySelector("#proxy-copy-key")?.addEventListener("click", copyManualProxyKey);
+  el.extensionShell.querySelectorAll(".proxy-revoke-key").forEach((button) => {
+    button.addEventListener("click", () => revokeManualProxyKey(button.dataset.keyId));
+  });
+
+  if (!state.proxyApiKeysLoaded) {
+    loadProxyApiKeys().catch((error) => {
+      state.proxyApiKeysLoaded = true;
+      state.proxyAuthorization = { status: "error", error: error.message };
+      renderProxyAuthorization();
+    });
+  }
+}
+
+async function loadProxyApiKeys() {
+  const payload = await api("/proxy/api-keys");
+  state.proxyApiKeys = payload.api_keys || [];
+  state.proxyApiKeysLoaded = true;
+  if (isProxyRoute()) {
+    const active = document.activeElement?.id;
+    renderProxyAuthorization();
+    if (active) document.getElementById(active)?.focus();
+  }
+}
+
+async function authorizeProxyDevice() {
+  const { deviceCode, userCode, name } = proxyRouteParams();
+  const button = el.extensionShell.querySelector("#proxy-authorize-button");
+  if (button) button.disabled = true;
+  try {
+    state.proxyAuthorization = await api("/proxy/device/approve", {
+      method: "POST",
+      body: {
+        device_code: deviceCode,
+        user_code: userCode,
+        name,
+      },
+    });
+  } catch (error) {
+    state.proxyAuthorization = { status: "error", error: error.message };
+  } finally {
+    renderProxyAuthorization();
+  }
+}
+
+async function createManualProxyKey() {
+  const input = el.extensionShell.querySelector("#proxy-key-name");
+  const name = input?.value || "Buddian Proxy";
+  const button = el.extensionShell.querySelector("#proxy-create-key");
+  if (button) button.disabled = true;
+  try {
+    const payload = await api("/proxy/api-keys", {
+      method: "POST",
+      body: { name },
+    });
+    state.proxyApiKey = payload.api_key || "";
+    await loadProxyApiKeys();
+  } catch (error) {
+    state.proxyAuthorization = { status: "error", error: error.message };
+    renderProxyAuthorization();
+  }
+}
+
+async function copyManualProxyKey() {
+  if (!state.proxyApiKey) return;
+  await navigator.clipboard.writeText(state.proxyApiKey);
+  state.proxyAuthorization = { status: t("copied") };
+  renderProxyAuthorization();
+}
+
+async function revokeManualProxyKey(keyId) {
+  if (!keyId) return;
+  await api(`/proxy/api-keys/${encodeURIComponent(keyId)}`, { method: "DELETE" });
+  await loadProxyApiKeys();
 }
 
 function renderAccount() {

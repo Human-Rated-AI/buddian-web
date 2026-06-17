@@ -903,6 +903,83 @@ textarea {
   padding: 14px;
 }
 
+.proxy-shell {
+  display: grid;
+  gap: 14px;
+  width: min(920px, 100%);
+  margin: 0 auto;
+  padding: 18px 12px 32px;
+}
+
+.proxy-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 16px;
+}
+
+.proxy-card h2 {
+  font-size: 24px;
+}
+
+.proxy-card p {
+  color: var(--muted);
+}
+
+.proxy-facts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.proxy-facts div {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 10px;
+}
+
+.proxy-facts dt,
+.proxy-key-result label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.proxy-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 720;
+}
+
+.proxy-status,
+.proxy-key-result {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel-2);
+  padding: 10px;
+}
+
+.proxy-status span,
+.proxy-key-result code {
+  overflow-wrap: anywhere;
+}
+
+.proxy-card pre {
+  margin: 0;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel-3);
+  padding: 10px;
+}
+
 .admin-warning {
   border: 2px solid #d92d20;
   background: #fff1f0;
