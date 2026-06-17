@@ -739,9 +739,14 @@ textarea {
 }
 
 .model-select-button.selected {
-  background: var(--accent);
-  color: #101713;
-  box-shadow: 0 0 0 1px rgba(105, 189, 47, 0.38);
+  background: #66717a;
+  color: #f7fafc;
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.42);
+}
+
+.model-select-button.selected:hover {
+  background: #737f89;
+  color: #ffffff;
 }
 
 .model-row:last-child {
