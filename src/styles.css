@@ -966,6 +966,36 @@ textarea {
   padding: 10px;
 }
 
+.proxy-policy {
+  display: grid;
+  gap: 8px;
+}
+
+.proxy-policy textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.proxy-scope-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.proxy-scope-grid label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 8px 10px;
+}
+
+.proxy-scope-grid input {
+  width: auto;
+  min-height: 0;
+}
+
 .proxy-status span,
 .proxy-key-result code {
   overflow-wrap: anywhere;

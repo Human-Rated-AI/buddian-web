@@ -740,6 +740,53 @@ function manualProxyKeyMarkup() {
   `;
 }
 
+function proxyPolicyMarkup() {
+  const scopes = [
+    ["models", "proxy_scope_models"],
+    ["e2ee", "proxy_scope_e2ee"],
+    ["billing", "proxy_scope_billing"],
+    ["media", "proxy_scope_media"],
+    ["custom_models", "proxy_scope_custom_models"],
+  ];
+  return `
+    <div class="proxy-policy">
+      <label for="proxy-daily-cap">${escapeHtml(t("proxy_daily_cap"))}</label>
+      <input id="proxy-daily-cap" type="number" min="0" step="0.01" inputmode="decimal" placeholder="${escapeHtml(t("proxy_cap_placeholder"))}">
+      <label for="proxy-monthly-cap">${escapeHtml(t("proxy_monthly_cap"))}</label>
+      <input id="proxy-monthly-cap" type="number" min="0" step="0.01" inputmode="decimal" placeholder="${escapeHtml(t("proxy_cap_placeholder"))}">
+      <label for="proxy-model-allowlist">${escapeHtml(t("proxy_model_allowlist"))}</label>
+      <textarea id="proxy-model-allowlist" rows="3" placeholder="phala/deepseek-v4-flash&#10;phala/qwen-*"></textarea>
+      <div class="proxy-scope-grid" aria-label="${escapeHtml(t("proxy_scopes"))}">
+        ${scopes.map(([value, label]) => `
+          <label>
+            <input type="checkbox" class="proxy-scope" value="${escapeHtml(value)}" ${["models", "e2ee", "billing"].includes(value) ? "checked" : ""}>
+            <span>${escapeHtml(t(label))}</span>
+          </label>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function proxyPolicyPayload() {
+  const daily = el.extensionShell.querySelector("#proxy-daily-cap")?.value || "";
+  const monthly = el.extensionShell.querySelector("#proxy-monthly-cap")?.value || "";
+  const allowlistText = el.extensionShell.querySelector("#proxy-model-allowlist")?.value || "";
+  const scopes = Array.from(el.extensionShell.querySelectorAll(".proxy-scope:checked"))
+    .map((node) => node.value)
+    .filter(Boolean);
+  const payload = {
+    scopes: scopes.length ? scopes : ["models", "e2ee", "billing"],
+    model_allowlist: allowlistText
+      .split(/[\n,]+/)
+      .map((item) => item.trim())
+      .filter(Boolean),
+  };
+  if (daily) payload.daily_spend_limit_usd = daily;
+  if (monthly) payload.monthly_spend_limit_usd = monthly;
+  return payload;
+}
+
 function renderProxyAuthorization() {
   const { deviceCode, userCode, name } = proxyRouteParams();
   const account = state.account?.user || {};
@@ -755,6 +802,7 @@ function renderProxyAuthorization() {
           <div><dt>${escapeHtml(t("proxy_name"))}</dt><dd>${escapeHtml(safeName)}</dd></div>
           <div><dt>${escapeHtml(t("proxy_user_code"))}</dt><dd><code>${escapeHtml(userCode || "")}</code></dd></div>
         </dl>
+        ${proxyPolicyMarkup()}
         <button type="button" id="proxy-authorize-button">${escapeHtml(t("proxy_authorize_button"))}</button>
         ${proxyAuthStatusMarkup()}
       </article>
@@ -766,6 +814,7 @@ function renderProxyAuthorization() {
         <p>${escapeHtml(t("proxy_manual_copy"))}</p>
         <label for="proxy-key-name">${escapeHtml(t("proxy_name"))}</label>
         <input id="proxy-key-name" type="text" value="Buddian Proxy" autocomplete="off">
+        ${proxyPolicyMarkup()}
         <button type="button" id="proxy-create-key">${escapeHtml(t("proxy_create_key"))}</button>
         ${manualProxyKeyMarkup()}
         ${proxyAuthStatusMarkup()}
@@ -778,6 +827,12 @@ function renderProxyAuthorization() {
         <div class="compact-item">
           <strong>${escapeHtml(key.name || key.key_prefix)}</strong>
           <span>${escapeHtml(key.key_prefix)} · ${escapeHtml(key.revoked_at ? t("proxy_key_revoked") : t("available"))} · ${escapeHtml(formatDateTime(key.created_at))}</span>
+          <span>${escapeHtml(t("proxy_scopes"))}: ${escapeHtml((key.scopes || []).join(", ") || "n/a")}</span>
+          <span>${escapeHtml(t("proxy_limits"))}: ${escapeHtml([
+            key.daily_spend_limit_usd ? `${t("proxy_daily_short")} ${money(key.daily_spend_limit_usd)}` : "",
+            key.monthly_spend_limit_usd ? `${t("proxy_monthly_short")} ${money(key.monthly_spend_limit_usd)}` : "",
+            (key.model_allowlist || []).length ? `${t("model")}: ${(key.model_allowlist || []).join(", ")}` : "",
+          ].filter(Boolean).join(" · ") || t("proxy_no_limits"))}</span>
           ${key.revoked_at ? "" : `<button type="button" class="secondary-button proxy-revoke-key" data-key-id="${escapeHtml(key.id)}">${escapeHtml(t("proxy_revoke_key"))}</button>`}
         </div>
       `).join("")
@@ -839,6 +894,7 @@ async function authorizeProxyDevice() {
         device_code: deviceCode,
         user_code: userCode,
         name,
+        ...proxyPolicyPayload(),
       },
     });
   } catch (error) {
@@ -856,7 +912,7 @@ async function createManualProxyKey() {
   try {
     const payload = await api("/proxy/api-keys", {
       method: "POST",
-      body: { name },
+      body: { name, ...proxyPolicyPayload() },
     });
     state.proxyApiKey = payload.api_key || "";
     await loadProxyApiKeys();
