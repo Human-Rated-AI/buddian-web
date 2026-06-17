@@ -733,6 +733,17 @@ textarea {
   border-bottom: 1px solid var(--line);
 }
 
+.model-row.selected {
+  border-color: var(--accent);
+  background: rgba(105, 189, 47, 0.10);
+}
+
+.model-select-button.selected {
+  background: var(--accent);
+  color: #101713;
+  box-shadow: 0 0 0 1px rgba(105, 189, 47, 0.38);
+}
+
 .model-row:last-child {
   border-bottom: 0;
 }

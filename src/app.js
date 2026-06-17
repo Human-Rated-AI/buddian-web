@@ -1007,8 +1007,10 @@ function renderModels() {
 
   el.modelList.innerHTML = "";
   for (const model of models) {
+    const isSelected = String(model.id) === state.selectedModel;
     const row = document.createElement("article");
     row.className = "model-row";
+    row.classList.toggle("selected", isSelected);
     row.innerHTML = `
       <div>
         <div class="model-id">${escapeHtml(model.id)}</div>
@@ -1024,7 +1026,7 @@ function renderModels() {
         <div><strong>${money(model.user_pricing.prompt_per_1m_tokens)}</strong> ${escapeHtml(t("price_in"))}</div>
         <div><strong>${money(model.user_pricing.completion_per_1m_tokens)}</strong> ${escapeHtml(t("price_out"))}</div>
       </div>
-      <button type="button">${escapeHtml(t("select"))}</button>
+      <button type="button" class="model-select-button${isSelected ? " selected" : ""}" aria-pressed="${isSelected ? "true" : "false"}">${escapeHtml(t(isSelected ? "selected_button" : "select"))}</button>
     `;
     row.querySelector("button").addEventListener("click", () => selectModel(model.id));
     el.modelList.appendChild(row);
@@ -1059,6 +1061,7 @@ function selectModel(modelId) {
   el.quoteModel.value = state.selectedModel;
   el.quoteResult.textContent = state.selectedModel ? t("selected") : t("select_model");
   clearProofBundle();
+  renderModels();
 }
 
 function syncTokenEstimate() {
